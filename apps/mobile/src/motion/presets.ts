@@ -3,8 +3,6 @@ import { Easing } from 'react-native-reanimated';
 export const motionDurations = {
   celebration: 260,
   checkpointLift: 180,
-  navigationPressIn: 90,
-  navigationPressOut: 100,
   redeem: 160,
   trail: 1400,
 } as const;

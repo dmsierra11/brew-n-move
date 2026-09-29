@@ -5,14 +5,11 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import { OfferIllustration } from '../../components/OfferIllustration';
-import { motionDurations, motionSprings } from '../../motion/presets';
+import { motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 import { Offer, offers } from './offers';
@@ -56,28 +53,12 @@ function RewardCard({ offer }: RewardCardProps) {
     artShift.value = withSpring(0, motionSprings.art);
   };
 
-  const openOffer = () => {
-    if (reduceMotion) {
-      navigateToOffer();
-      return;
-    }
-
-    cardScale.value = withSequence(
-      withTiming(0.97, { duration: motionDurations.navigationPressIn }),
-      withTiming(1, { duration: motionDurations.navigationPressOut }, (finished) => {
-        if (finished) {
-          scheduleOnRN(navigateToOffer);
-        }
-      }),
-    );
-  };
-
   return (
     <Animated.View style={cardStyle}>
       <Pressable
         accessibilityHint="Opens the offer redemption screen"
         accessibilityRole="button"
-        onPress={openOffer}
+        onPress={navigateToOffer}
         onPressIn={pressIn}
         onPressOut={pressOut}
         style={styles.card}
