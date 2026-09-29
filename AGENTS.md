@@ -78,7 +78,7 @@ dailyPoints = min(floor(verifiedDailySteps / 100), 100)
 ```
 
 - 100 verified steps earn 1 Brew Point.
-- The daily maximum is 100 Brew Points, reached at 10,000 steps.
+- The daily maximum is 100 Brew Points, reached at 10,000 steps. This 10,000-step limit is a provisional cap. Adjust it once the points cost of rewards is known and we can see how members actually use the app, so extra walking still feels worthwhile.
 - There is no weekly cap.
 - Steps left over below the next 100-step threshold do not roll over to the next day.
 - Earned Brew Points stay in the balance until redeemed. Do not expire them in the MVP.
