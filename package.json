@@ -1,0 +1,14 @@
+{
+  "name": "brew-n-move",
+  "private": true,
+  "packageManager": "pnpm@10.26.2",
+  "scripts": {
+    "mobile": "pnpm --filter mobile start",
+    "admin": "pnpm --filter admin dev",
+    "eas:whoami": "cd apps/mobile && pnpm dlx eas-cli@latest whoami",
+    "eas:init": "cd apps/mobile && pnpm dlx eas-cli@latest init",
+    "eas:device": "cd apps/mobile && pnpm dlx eas-cli@latest device:create",
+    "eas:devices": "cd apps/mobile && pnpm dlx eas-cli@latest device:list",
+    "eas:build:ios": "cd apps/mobile && pnpm dlx eas-cli@latest build --platform ios --profile development"
+  }
+}

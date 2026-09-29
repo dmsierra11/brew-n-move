@@ -1,0 +1,10 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "corepack": true,
+      "pnpm": "10.26.2"
+    }
+  }
+}
