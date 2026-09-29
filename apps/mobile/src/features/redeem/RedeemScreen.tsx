@@ -1,61 +1,93 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
-  Animated,
-  PanResponder,
+  LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
-import { selectedOffer } from '../rewards/offers';
+import { motionDurations, motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
+import { selectedOffer } from '../rewards/offers';
 
 const thumbSize = 62;
 
 export function RedeemScreen() {
-  const dragX = useRef(new Animated.Value(0)).current;
-  const maxDragRef = useRef(0);
-  const [trackWidth, setTrackWidth] = useState(0);
+  const dragX = useSharedValue(0);
+  const dragStart = useSharedValue(0);
+  const maxDrag = useSharedValue(0);
   const [redeemed, setRedeemed] = useState(false);
+  const reduceMotion = useReducedMotion();
 
-  const maxDrag = Math.max(0, trackWidth - thumbSize - 10);
-  maxDragRef.current = maxDrag;
+  const markRedeemed = () => setRedeemed(true);
 
   const completeRedemption = () => {
-    Animated.timing(dragX, {
-      duration: 160,
-      toValue: maxDrag,
-      useNativeDriver: true,
-    }).start(() => setRedeemed(true));
+    if (reduceMotion) {
+      dragX.value = maxDrag.value;
+      markRedeemed();
+      return;
+    }
+
+    dragX.value = withTiming(
+      maxDrag.value,
+      { duration: motionDurations.redeem },
+      (finished) => {
+        if (finished) {
+          scheduleOnRN(markRedeemed);
+        }
+      },
+    );
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 4,
-      onPanResponderMove: (_, gesture) => {
-        dragX.setValue(Math.max(0, Math.min(gesture.dx, maxDragRef.current)));
-      },
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx > maxDragRef.current * 0.7) {
-          Animated.timing(dragX, {
-            duration: 160,
-            toValue: maxDragRef.current,
-            useNativeDriver: true,
-          }).start(() => setRedeemed(true));
-          return;
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-4, 4])
+    .failOffsetY([-12, 12])
+    .onBegin(() => {
+      dragStart.value = dragX.value;
+    })
+    .onUpdate((event) => {
+      dragX.value = Math.max(
+        0,
+        Math.min(dragStart.value + event.translationX, maxDrag.value),
+      );
+    })
+    .onEnd(() => {
+      if (dragX.value > maxDrag.value * 0.7) {
+        if (reduceMotion) {
+          dragX.value = maxDrag.value;
+          scheduleOnRN(markRedeemed);
+        } else {
+          dragX.value = withTiming(
+            maxDrag.value,
+            { duration: motionDurations.redeem },
+            (finished) => {
+              if (finished) {
+                scheduleOnRN(markRedeemed);
+              }
+            },
+          );
         }
-        Animated.spring(dragX, {
-          bounciness: 2,
-          speed: 18,
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      },
-    }),
-  ).current;
+        return;
+      }
+
+      dragX.value = reduceMotion ? 0 : withSpring(0, motionSprings.settle);
+    });
+
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: dragX.value }],
+  }));
 
   if (redeemed) {
     return (
@@ -127,16 +159,20 @@ export function RedeemScreen() {
             accessibilityLabel={`Swipe to spend ${selectedOffer.points} points`}
             accessibilityRole="button"
             onAccessibilityAction={completeRedemption}
-            onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
+            onLayout={(event: LayoutChangeEvent) => {
+              maxDrag.value = Math.max(
+                0,
+                event.nativeEvent.layout.width - thumbSize - 10,
+              );
+            }}
             style={styles.slider}
           >
             <Text style={styles.sliderText}>Swipe to redeem</Text>
-            <Animated.View
-              {...panResponder.panHandlers}
-              style={[styles.thumb, { transform: [{ translateX: dragX }] }]}
-            >
-              <Text style={styles.thumbText}>→</Text>
-            </Animated.View>
+            <GestureDetector gesture={panGesture}>
+              <Animated.View style={[styles.thumb, thumbStyle]}>
+                <Text style={styles.thumbText}>→</Text>
+              </Animated.View>
+            </GestureDetector>
           </View>
           <Text style={styles.finalCopy}>This action spends Brew Points immediately.</Text>
         </View>

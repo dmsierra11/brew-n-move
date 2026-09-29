@@ -43,6 +43,7 @@ Motion makes earning feel light and never adds a step.
 - Swipe to redeem: move with the gesture and change status immediately.
 - Respect reduced-motion preferences by showing the end state immediately.
 - Use one orchestrated moment instead of scattered bouncing elements.
+- Use Reanimated shared values and the presets in `apps/mobile/src/motion/presets.ts` for member-app motion. Use Gesture Handler for gesture-driven motion; do not introduce React Native `Animated` or `PanResponder`.
 
 Do not add a mascot, coins, streaks, levels, ads, jackpots, or a “validate my steps” action. Do not imitate Duolingo characters or Macadam artwork.
 

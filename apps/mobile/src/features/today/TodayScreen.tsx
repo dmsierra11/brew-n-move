@@ -1,14 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Animated,
-  Easing,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
+import { motionDurations, motionEasings, motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 import { MilestoneProgress } from './MilestoneProgress';
@@ -19,84 +23,79 @@ const milestone = 5000;
 const dailyCap = 10000;
 
 export function TodayScreen() {
-  const countProgress = useRef(new Animated.Value(0)).current;
-  const trailProgress = useRef(new Animated.Value(initialSteps / milestone)).current;
-  const checkpointScale = useRef(new Animated.Value(1)).current;
-  const celebration = useRef(new Animated.Value(0)).current;
+  const countProgress = useSharedValue(0);
+  const trailProgress = useSharedValue(initialSteps / milestone);
+  const checkpointScale = useSharedValue(1);
+  const celebration = useSharedValue(0);
   const [displayedSteps, setDisplayedSteps] = useState(initialSteps);
   const [reached, setReached] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+  const reduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const subscription = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduceMotion,
-    );
-    return () => subscription.remove();
+  const updateDisplayedSteps = useCallback((progress: number) => {
+    setDisplayedSteps(Math.round(initialSteps + (updatedSteps - initialSteps) * progress));
   }, []);
 
-  useEffect(() => {
-    if (reduceMotion === null) {
-      return;
-    }
+  useAnimatedReaction(
+    () => countProgress.value,
+    (progress, previousProgress) => {
+      if (progress !== previousProgress) {
+        scheduleOnRN(updateDisplayedSteps, progress);
+      }
+    },
+    [updateDisplayedSteps],
+  );
 
+  useEffect(() => {
     if (reduceMotion) {
       setDisplayedSteps(updatedSteps);
-      trailProgress.setValue(1);
-      celebration.setValue(1);
+      countProgress.value = 1;
+      trailProgress.value = 1;
+      celebration.value = 1;
       setReached(true);
       return;
     }
 
-    const listenerId = countProgress.addListener(({ value }) => {
-      setDisplayedSteps(Math.round(initialSteps + (updatedSteps - initialSteps) * value));
-    });
-
     const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(countProgress, {
-          duration: 1400,
-          easing: Easing.out(Easing.cubic),
-          toValue: 1,
-          useNativeDriver: false,
-        }),
-        Animated.timing(trailProgress, {
-          duration: 1400,
-          easing: Easing.out(Easing.cubic),
-          toValue: 1,
-          useNativeDriver: false,
-        }),
-      ]).start(() => {
-        setReached(true);
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(checkpointScale, {
-              duration: 180,
-              toValue: 1.2,
-              useNativeDriver: true,
-            }),
-            Animated.spring(checkpointScale, {
-              bounciness: 8,
-              speed: 12,
-              toValue: 1,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.timing(celebration, {
-            duration: 260,
-            toValue: 1,
-            useNativeDriver: true,
-          }),
-        ]).start();
+      countProgress.value = withTiming(1, {
+        duration: motionDurations.trail,
+        easing: motionEasings.trail,
       });
+      trailProgress.value = withTiming(
+        1,
+        {
+          duration: motionDurations.trail,
+          easing: motionEasings.trail,
+        },
+        (finished) => {
+          if (!finished) {
+            return;
+          }
+
+          scheduleOnRN(setReached, true);
+          checkpointScale.value = withSequence(
+            withTiming(1.2, { duration: motionDurations.checkpointLift }),
+            withSpring(1, motionSprings.checkpoint),
+          );
+          celebration.value = withTiming(1, {
+            duration: motionDurations.celebration,
+          });
+        },
+      );
     }, 700);
 
     return () => {
       clearTimeout(timer);
-      countProgress.removeListener(listenerId);
+      cancelAnimation(countProgress);
+      cancelAnimation(trailProgress);
+      cancelAnimation(checkpointScale);
+      cancelAnimation(celebration);
     };
   }, [celebration, checkpointScale, countProgress, reduceMotion, trailProgress]);
+
+  const celebrationStyle = useAnimatedStyle(() => ({
+    opacity: celebration.value,
+    transform: [{ translateY: 6 * (1 - celebration.value) }],
+  }));
 
   const pointsToday = Math.min(Math.floor(displayedSteps / 100), 100);
   const remainingToMilestone = Math.max(0, milestone - displayedSteps);
@@ -119,20 +118,7 @@ export function TodayScreen() {
           <View style={styles.milestoneMessage}>
             {reached ? (
               <Animated.View
-                style={[
-                  styles.celebration,
-                  {
-                    opacity: celebration,
-                    transform: [
-                      {
-                        translateY: celebration.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [6, 0],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
+                style={[styles.celebration, celebrationStyle]}
               >
                 <View style={styles.steamMarks}>
                   <View style={[styles.steamMark, styles.steamShort]} />

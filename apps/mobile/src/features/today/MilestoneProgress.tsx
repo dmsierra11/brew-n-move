@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 import { colors, fonts, radii } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 
-type MilestoneProgressProps = {
-  checkpointScale: Animated.Value;
+type MilestoneProgressProps = Readonly<{
+  checkpointScale: SharedValue<number>;
   milestone: number;
-  progress: Animated.Value;
+  progress: SharedValue<number>;
   reached: boolean;
-};
+}>;
 
 const trailPath = 'M7 52 C48 52 57 30 97 34 C135 38 150 60 190 49 C224 40 240 19 289 25';
 
@@ -21,10 +23,12 @@ export function MilestoneProgress({
   reached,
 }: MilestoneProgressProps) {
   const [width, setWidth] = useState(0);
-  const revealWidth = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, width],
-  });
+  const progressStyle = useAnimatedStyle(() => ({
+    width: progress.value * width,
+  }));
+  const checkpointStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkpointScale.value }],
+  }));
 
   return (
     <View
@@ -42,7 +46,7 @@ export function MilestoneProgress({
         />
       </Svg>
 
-      <Animated.View style={[styles.progressClip, { width: revealWidth }]}>
+      <Animated.View style={[styles.progressClip, progressStyle]}>
         {width > 0 ? (
           <Svg height={72} viewBox="0 0 296 72" width={width}>
             <Path
@@ -61,7 +65,7 @@ export function MilestoneProgress({
         style={[
           styles.checkpoint,
           reached && styles.checkpointReached,
-          { transform: [{ scale: checkpointScale }] },
+          checkpointStyle,
         ]}
       >
         <Text style={[styles.checkpointValue, reached && styles.checkpointValueReached]}>

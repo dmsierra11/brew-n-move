@@ -1,71 +1,79 @@
 import { router } from 'expo-router';
-import { useRef } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { OfferIllustration } from '../../components/OfferIllustration';
+import { motionDurations, motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 import { Offer, offers } from './offers';
 
-type RewardCardProps = {
+type RewardCardProps = Readonly<{
   offer: Offer;
-};
+}>;
+
+const navigateToOffer = () => router.push('/offer');
 
 function RewardCard({ offer }: RewardCardProps) {
-  const cardScale = useRef(new Animated.Value(1)).current;
-  const artShift = useRef(new Animated.Value(0)).current;
+  const cardScale = useSharedValue(1);
+  const artShift = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }],
+  }));
+  const artStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(artShift.value, [0, 1], [0, -4]) },
+      { rotate: `${interpolate(artShift.value, [0, 1], [0, -2])}deg` },
+    ],
+  }));
 
   const pressIn = () => {
-    Animated.parallel([
-      Animated.spring(cardScale, {
-        bounciness: 0,
-        speed: 30,
-        toValue: 0.975,
-        useNativeDriver: true,
-      }),
-      Animated.spring(artShift, {
-        bounciness: 5,
-        speed: 22,
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (reduceMotion) {
+      return;
+    }
+
+    cardScale.value = withSpring(0.975, motionSprings.press);
+    artShift.value = withSpring(1, motionSprings.art);
   };
 
   const pressOut = () => {
-    Animated.parallel([
-      Animated.spring(cardScale, {
-        bounciness: 4,
-        speed: 24,
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-      Animated.spring(artShift, {
-        bounciness: 7,
-        speed: 18,
-        toValue: 0,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (reduceMotion) {
+      return;
+    }
+
+    cardScale.value = withSpring(1, motionSprings.settle);
+    artShift.value = withSpring(0, motionSprings.art);
   };
 
   const openOffer = () => {
-    Animated.sequence([
-      Animated.timing(cardScale, {
-        duration: 90,
-        toValue: 0.97,
-        useNativeDriver: true,
+    if (reduceMotion) {
+      navigateToOffer();
+      return;
+    }
+
+    cardScale.value = withSequence(
+      withTiming(0.97, { duration: motionDurations.navigationPressIn }),
+      withTiming(1, { duration: motionDurations.navigationPressOut }, (finished) => {
+        if (finished) {
+          scheduleOnRN(navigateToOffer);
+        }
       }),
-      Animated.timing(cardScale, {
-        duration: 100,
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]).start(() => router.push('/offer'));
+    );
   };
 
   return (
-    <Animated.View style={{ transform: [{ scale: cardScale }] }}>
+    <Animated.View style={cardStyle}>
       <Pressable
         accessibilityHint="Opens the offer redemption screen"
         accessibilityRole="button"
@@ -78,22 +86,7 @@ function RewardCard({ offer }: RewardCardProps) {
           style={[
             styles.art,
             { backgroundColor: offer.accent },
-            {
-              transform: [
-                {
-                  translateY: artShift.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -4],
-                  }),
-                },
-                {
-                  rotate: artShift.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '-2deg'],
-                  }),
-                },
-              ],
-            },
+            artStyle,
           ]}
         >
           <OfferIllustration kind={offer.illustration} />
