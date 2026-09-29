@@ -26,11 +26,17 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "eas": {
         "projectId": "5ea6e594-7a68-4199-b9e1-05677c22e7d6"
       }
     },
-    "owner": "dmsierra11"
+    "owner": "dmsierra11",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

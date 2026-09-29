@@ -35,6 +35,25 @@ Leave these for a later slice:
 - Point expiration
 - Member-specific redemption limits, cooldowns, and member-only rewards
 
+## Member navigation
+
+Use four bottom tabs in this order:
+
+- Home — today's verified steps, Brew Points earned today, and the member's balance
+- Rewards — the standard offer list, with an optional map view after location access is granted
+- Communities — communities the member can follow
+- Profile — account, display name, health access, and other settings
+
+Keep the Brew Points balance visible in the app header. Begin redemption from an offer detail screen. Do not add separate Earn, Map, Spend, Discover, Social, or Challenges tabs, or a floating centre action.
+
+For the MVP, Map lives under Rewards rather than in the bottom bar. Implement it as an independent screen and module with no dependency on the Rewards tab layout, so it can become a standalone tab later without rewriting its feature logic.
+
+## Modularity
+
+Keep screens and components independent from their current navigation position when they are likely to move, be reused, or be rebranded. Keep navigation wrappers, tab labels, and other placement-specific presentation separate from feature logic.
+
+Prefer clear, small feature boundaries over speculative abstractions. Do not add configurability or shared layers without a concrete use case. If it is unclear how reusable or movable a screen or component needs to be, ask before implementing it.
+
 ## Stack
 
 - Member app: Expo development builds with TypeScript. Health integrations require a development build, not Expo Go.
