@@ -17,12 +17,13 @@ Member and admin apps share one Supabase project.
 
 ## MVP
 
-The MVP includes sign-up, step-based earning, a rewards list, community following, member-initiated in-person redemption, and internal admin management.
+The MVP includes sign-up, step-based earning, a rewards list, community joining, member-initiated in-person redemption, and internal admin management.
 
 In the MVP:
 
-- A member can follow more than one community. Following is not required to earn Brew Points.
-- Cafés and offers may be linked to a community for display. A member can see and redeem standard offers from any partner without following that community.
+- Member-facing copy uses Join and Joined. In the MVP, joining is a lightweight association that behaves like following; it may become a fuller membership concept later.
+- A member can join more than one community. Joining is not required to earn Brew Points.
+- Cafés and offers may be linked to a community for display. A member can see and redeem standard offers from any partner without joining that community.
 - Brew & Move staff enter partners, locations, offers, and communities. Partners have no login, scanner, or app.
 - Each redemption is stored in Supabase with partner, location, offer, points spent, value or discount, member, and timestamp.
 
@@ -41,7 +42,7 @@ Use four bottom tabs in this order:
 
 - Home — today's verified steps, Brew Points earned today, and the member's balance
 - Rewards — the standard offer list, with an optional map view after location access is granted
-- Communities — communities the member can follow
+- Communities — communities the member can join
 - Profile — account, display name, health access, and other settings
 
 Keep the Brew Points balance visible in the app header. Begin redemption from an offer detail screen. Do not add separate Earn, Map, Spend, Discover, Social, or Challenges tabs, or a floating centre action.
@@ -83,6 +84,8 @@ Onboarding, after sign-up, collects:
 Do not collect surname, username, phone number, gender, full date of birth, home address, profile photo, or a Solana wallet address.
 
 Detect timezone, country or region, and health platform from the device. Do not ask the member to type them. Request HealthKit or Health Connect permission when step tracking is introduced, not on the sign-up form.
+
+Profile must provide a readily discoverable way to initiate account deletion. Deletion is permanent, requires confirmation, and must remove the account and associated personal data except records that Brew & Move is legally required to retain. Retention must be disclosed. The production deletion flow and external web request path are implemented with the auth and backend slice; a visual prototype must not be treated as a working deletion service.
 
 ## Earning
 

@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../../components/PlaceholderScreen';
+import { CommunitiesScreen } from '../../features/communities/CommunitiesScreen';
 
 export default function CommunitiesRoute() {
-  return <PlaceholderScreen />;
+  return <CommunitiesScreen />;
 }

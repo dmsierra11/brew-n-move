@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, spacing } from '../theme/tokens';
+import { colors, spacing } from '../theme/tokens';
+import { AppText } from './AppText';
 import { PointsBalance } from './PointsBalance';
 
 type MemberHeaderProps = {
@@ -15,11 +16,11 @@ export function MemberHeader({ eyebrow, title }: Readonly<MemberHeaderProps>) {
       <View style={styles.header}>
         <View>
           <View style={styles.eyebrowSlot}>
-            {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+            {eyebrow ? <AppText role="eyebrow" style={styles.eyebrow}>{eyebrow}</AppText> : null}
           </View>
-          <Text accessibilityRole="header" style={styles.heading}>
+          <AppText accessibilityRole="header" role="title" style={styles.heading}>
             {title}
-          </Text>
+          </AppText>
         </View>
         <PointsBalance />
       </View>
@@ -43,14 +44,10 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.moss,
-    fontFamily: fonts.bold,
-    fontSize: 11,
     letterSpacing: 1.5,
   },
   heading: {
     color: colors.ink,
-    fontFamily: fonts.displayExtra,
-    fontSize: 40,
     letterSpacing: -1.4,
   },
 });

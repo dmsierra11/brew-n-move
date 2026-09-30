@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedReaction,
@@ -12,8 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { AppText } from '../../components/AppText';
 import { motionDurations, motionEasings, motionSprings } from '../../motion/presets';
-import { colors, fonts, radii, spacing } from '../../theme/tokens';
+import { colors, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 import { MilestoneProgress } from './MilestoneProgress';
 
@@ -104,9 +105,9 @@ export function TodayScreen() {
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <Text style={styles.heroLabel}>Verified steps</Text>
-          <Text style={styles.stepCount}>{formatNumber(displayedSteps)}</Text>
-          <Text style={styles.unit}>steps</Text>
+          <AppText role="caption" style={styles.heroLabel}>Verified steps</AppText>
+          <AppText role="hero" style={styles.stepCount}>{formatNumber(displayedSteps)}</AppText>
+          <AppText role="action" style={styles.unit}>steps</AppText>
 
           <MilestoneProgress
             checkpointScale={checkpointScale}
@@ -125,15 +126,15 @@ export function TodayScreen() {
                   <View style={styles.steamMark} />
                   <View style={[styles.steamMark, styles.steamShort]} />
                 </View>
-                <Text style={styles.reachedTitle}>5,000 reached</Text>
-                <Text style={styles.reachedCopy}>That’s 50 Brew Points today.</Text>
+                <AppText role="heading" style={styles.reachedTitle}>5,000 reached</AppText>
+                <AppText role="caption" style={styles.reachedCopy}>That’s 50 Brew Points today.</AppText>
               </Animated.View>
             ) : (
               <>
-                <Text style={styles.nextTitle}>
+                <AppText role="heading" style={styles.nextTitle}>
                   {formatNumber(remainingToMilestone)} steps to 5,000
-                </Text>
-                <Text style={styles.nextCopy}>Your 50-point milestone is just ahead.</Text>
+                </AppText>
+                <AppText role="caption" style={styles.nextCopy}>Your 50-point milestone is just ahead.</AppText>
               </>
             )}
           </View>
@@ -141,18 +142,18 @@ export function TodayScreen() {
 
         <View style={styles.pointsCard}>
           <View>
-            <Text style={styles.cardLabel}>Earned today</Text>
-            <Text style={styles.cardCopy}>Every 100 verified steps earns 1 point.</Text>
+            <AppText role="heading" style={styles.cardLabel}>Earned today</AppText>
+            <AppText role="caption" style={styles.cardCopy}>Every 100 verified steps earns 1 point.</AppText>
           </View>
           <View style={styles.pointsAmount}>
-            <Text style={styles.pointsNumber}>{pointsToday}</Text>
-            <Text style={styles.pointsWord}>points</Text>
+            <AppText role="stat" style={styles.pointsNumber}>{pointsToday}</AppText>
+            <AppText role="caption" style={styles.pointsWord}>points</AppText>
           </View>
         </View>
 
         <View style={styles.capRow}>
-          <Text style={styles.capText}>Daily earning cap</Text>
-          <Text style={styles.capValue}>{formatNumber(dailyCap)} steps · 100 points</Text>
+          <AppText role="caption" style={styles.capText}>Daily earning cap</AppText>
+          <AppText role="caption" style={styles.capValue}>{formatNumber(dailyCap)} steps · 100 points</AppText>
         </View>
       </ScrollView>
     </View>
@@ -181,21 +182,13 @@ const styles = StyleSheet.create({
   },
   heroLabel: {
     color: colors.muted,
-    fontFamily: fonts.semibold,
-    fontSize: 15,
   },
   stepCount: {
     color: colors.ink,
-    fontFamily: fonts.displayExtra,
-    fontSize: 74,
-    letterSpacing: -4,
-    lineHeight: 84,
     marginTop: spacing.sm,
   },
   unit: {
     color: colors.ink,
-    fontFamily: fonts.semibold,
-    fontSize: 17,
   },
   milestoneMessage: {
     alignItems: 'center',
@@ -205,13 +198,9 @@ const styles = StyleSheet.create({
   },
   nextTitle: {
     color: colors.ink,
-    fontFamily: fonts.display,
-    fontSize: 19,
   },
   nextCopy: {
     color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 13,
     marginTop: 2,
   },
   celebration: {
@@ -236,13 +225,9 @@ const styles = StyleSheet.create({
   },
   reachedTitle: {
     color: colors.moss,
-    fontFamily: fonts.display,
-    fontSize: 20,
   },
   reachedCopy: {
     color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 13,
     marginTop: 1,
   },
   pointsCard: {
@@ -256,13 +241,9 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     color: colors.card,
-    fontFamily: fonts.display,
-    fontSize: 22,
   },
   cardCopy: {
     color: colors.mossSoft,
-    fontFamily: fonts.body,
-    fontSize: 12,
     marginTop: 3,
     maxWidth: 210,
   },
@@ -271,14 +252,9 @@ const styles = StyleSheet.create({
   },
   pointsNumber: {
     color: colors.card,
-    fontFamily: fonts.displayExtra,
-    fontSize: 38,
-    lineHeight: 40,
   },
   pointsWord: {
     color: colors.mossSoft,
-    fontFamily: fonts.semibold,
-    fontSize: 12,
   },
   capRow: {
     alignItems: 'center',
@@ -289,12 +265,8 @@ const styles = StyleSheet.create({
   },
   capText: {
     color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: 13,
   },
   capValue: {
     color: colors.ink,
-    fontFamily: fonts.semibold,
-    fontSize: 13,
   },
 });

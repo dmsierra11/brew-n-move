@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { AppText } from '../../components/AppText';
 import { OfferIllustration } from '../../components/OfferIllustration';
 import { motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
@@ -74,13 +75,13 @@ function RewardCard({ offer }: RewardCardProps) {
         </Animated.View>
 
         <View style={styles.cardBody}>
-          <Text style={styles.partner}>{offer.partner}</Text>
-          <Text style={styles.title}>{offer.title}</Text>
+          <AppText role="eyebrow" style={styles.partner}>{offer.partner}</AppText>
+          <AppText role="heading" style={styles.title}>{offer.title}</AppText>
           <View style={styles.cardBottom}>
-            <Text style={styles.value}>{offer.value}</Text>
+            <AppText role="caption" style={styles.value}>{offer.value}</AppText>
             <View style={styles.cost}>
-              <Text style={styles.costValue}>{formatNumber(offer.points)}</Text>
-              <Text style={styles.costLabel}>points</Text>
+              <AppText role="action" style={styles.costValue}>{formatNumber(offer.points)}</AppText>
+              <AppText role="caption" style={styles.costLabel}>points</AppText>
             </View>
           </View>
         </View>
@@ -97,7 +98,7 @@ export function RewardsScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.intro}>Choose a café treat.</Text>
+        <AppText role="body" style={styles.intro}>Choose a café treat.</AppText>
 
         <View style={styles.list}>
           {offers.map((offer) => (
@@ -120,9 +121,6 @@ const styles = StyleSheet.create({
   },
   intro: {
     color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 16,
-    lineHeight: 23,
     marginTop: spacing.lg,
     maxWidth: 330,
   },
@@ -155,16 +153,9 @@ const styles = StyleSheet.create({
   },
   partner: {
     color: colors.moss,
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
   },
   title: {
     color: colors.ink,
-    fontFamily: fonts.display,
-    fontSize: 21,
-    lineHeight: 23,
     marginTop: 4,
   },
   cardBottom: {
@@ -175,8 +166,6 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.muted,
-    fontFamily: fonts.semibold,
-    fontSize: 14,
   },
   cost: {
     alignItems: 'baseline',
@@ -185,13 +174,9 @@ const styles = StyleSheet.create({
   },
   costValue: {
     color: colors.ink,
-    fontFamily: fonts.bold,
-    fontSize: 18,
   },
   costLabel: {
     color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: 11,
   },
   arrow: {
     color: colors.ink,

@@ -62,7 +62,7 @@ pnpm --filter mobile ios
 
 ## Product
 
-The MVP covers sign-up, step-based earning, a rewards list, community following, member-initiated in-person redemption, and internal admin management.
+The MVP covers sign-up, step-based earning, a rewards list, community joining, member-initiated in-person redemption, and internal admin management. Joining is a lightweight association in the MVP and does not gate earning or standard rewards.
 
 Members sign up with email and password, Sign in with Apple, or Sign in with Google. Onboarding collects a first name and a display name. The interface shows Brew Points only.
 

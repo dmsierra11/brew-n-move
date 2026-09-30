@@ -30,6 +30,32 @@ Use the source tokens in `apps/mobile/src/theme/tokens.ts`.
 
 Use Bricolage Grotesque for display text and Figtree for interface text. Let display type carry personality; keep body copy calm.
 
+Use the named roles from `apps/mobile/src/theme/tokens.ts` through `AppText`:
+
+- Hero — 74, Bricolage ExtraBold. The one dominant number.
+- Display — 48, Bricolage ExtraBold. A dominant title without the tab header.
+- Title — 40, Bricolage ExtraBold. Tab titles and confirmation headlines.
+- Stat — 38, Bricolage ExtraBold. A secondary number beside a label.
+- Value — 28, Bricolage Bold. A reward discount or value.
+- Heading — 21, Bricolage Bold. Card and milestone titles.
+- Action — 17, Figtree Bold. Buttons, swipe labels, and short units.
+- Body — 16, Figtree Regular. Introductions and primary instructions.
+- Caption — 13, Figtree Regular. Supporting sentences and metadata.
+- Eyebrow — 11, Figtree Bold, uppercase and tracked. Days, sections, and partner names.
+
+Keep text measurements local when they belong to a composition rather than a reusable hierarchy, such as trail checkpoint labels and café staff proof figures.
+
+## Buttons
+
+- Use the Action type role, a pill shape, and a minimum 44-point touch target.
+- Primary is moss with light text. It means take the main positive action, such as Join or Connect.
+- Muted is gray with ink text. It communicates an existing state that opens management, such as Joined or Connected; it is not disabled.
+- Quiet is a card-coloured surface with an unobtrusive border. Use it for secondary and reversible actions such as Cancel or Sign out.
+- Danger quiet uses blocked text and border. Use it as the entry point to a destructive flow, such as Delete account.
+- Danger is blocked with light text. Use it only for the final destructive action inside a confirmation.
+- Keep visual appearance separate from semantic state. Set appearance explicitly; `selected` exists for accessibility and does not choose a colour.
+- Use clear labels and an icon where it clarifies state. Never communicate state or danger through colour alone.
+
 The signature is a compact circular brew stamp paired with the member's Brew Points balance in the header.
 
 The visual motif is a walking trail that curls into coffee steam. Use it for progress paths, café illustrations, and small transitions. Do not scatter it as decoration.
@@ -68,6 +94,25 @@ Do not add a mascot, coins, streaks, levels, ads, jackpots, or a “validate my 
 - Each card shows partner, offer, discount or value, and points cost.
 - Give each offer a distinct original café illustration; do not repeat one placeholder icon.
 - Begin redemption from offer detail.
+
+### Communities
+
+- Use Join and Joined in member-facing copy. In the MVP, joining is a lightweight association with the same behaviour as following; it can become a fuller membership concept later.
+- Explain once that joining is optional and a member can join more than one community.
+- Use image-led vertical cards with an original walking-and-coffee illustration, community name, short description, place, and member count.
+- Put a full-width Join action on each community card. Do not require a detail screen for the action.
+- Use a moss filled pill for Join. Use a muted gray pill with a downward chevron for Joined so it reads as a relationship-management control rather than another primary action.
+- Tapping Joined opens a bottom-sheet confirmation. Leaving uses the blocked colour and never happens from the card without confirmation.
+- Keep joining independent from earning and access to standard offers.
+
+### Profile
+
+- Group Account, Health, and Account management under eyebrow labels.
+- Show email as read-only and let the member edit their display name.
+- Show the detected health platform and a direct connection status. Connect is primary; Connected is muted and opens management rather than disconnecting immediately.
+- Use a quiet sign-out action. Reserve blocked red for unavailable or destructive states that need warning.
+- Put Delete account under Account management as a danger-quiet entry point, then require a bottom-sheet confirmation with a filled danger action.
+- Do not show data the product does not collect or member-facing chain details.
 
 ### Swipe to redeem
 

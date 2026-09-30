@@ -18,6 +18,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { AppText } from '../../components/AppText';
 import { motionDurations, motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 import { selectedOffer } from '../rewards/offers';
@@ -96,28 +97,28 @@ export function RedeemScreen() {
           <View style={styles.check}>
             <Text style={styles.checkText}>✓</Text>
           </View>
-          <Text style={styles.redeemedStatus}>REDEEMED</Text>
-          <Text style={styles.redeemedTitle}>{selectedOffer.title}</Text>
-          <Text style={styles.redeemedPartner}>
+          <AppText role="eyebrow" style={styles.redeemedStatus}>Redeemed</AppText>
+          <AppText role="title" style={styles.redeemedTitle}>{selectedOffer.title}</AppText>
+          <AppText role="caption" style={styles.redeemedPartner}>
             {selectedOffer.partner} · {selectedOffer.location}
-          </Text>
+          </AppText>
         </View>
 
         <View style={styles.proofCard}>
           <View>
-            <Text style={styles.proofLabel}>Redeemed at</Text>
+            <AppText role="caption" style={styles.proofLabel}>Redeemed at</AppText>
             <Text style={styles.proofValue}>12:41</Text>
           </View>
           <View style={styles.proofDivider} />
           <View>
-            <Text style={styles.proofLabel}>Valid for staff</Text>
+            <AppText role="caption" style={styles.proofLabel}>Valid for staff</AppText>
             <Text style={styles.proofValue}>4:59</Text>
           </View>
         </View>
 
-        <Text style={styles.staffNote}>Show this live confirmation to café staff.</Text>
+        <AppText role="caption" style={styles.staffNote}>Show this live confirmation to café staff.</AppText>
         <Pressable onPress={() => router.back()} style={styles.doneButton}>
-          <Text style={styles.doneText}>Done</Text>
+          <AppText role="action" style={styles.doneText}>Done</AppText>
         </Pressable>
       </SafeAreaView>
     );
@@ -136,24 +137,24 @@ export function RedeemScreen() {
         </Pressable>
 
         <View style={styles.offerBlock}>
-          <Text style={styles.partner}>{selectedOffer.partner}</Text>
-          <Text style={styles.location}>{selectedOffer.location}</Text>
-          <Text style={styles.offer}>{selectedOffer.title}</Text>
-          <Text style={styles.value}>{selectedOffer.value}</Text>
+          <AppText role="eyebrow" style={styles.partner}>{selectedOffer.partner}</AppText>
+          <AppText role="caption" style={styles.location}>{selectedOffer.location}</AppText>
+          <AppText role="display" style={styles.offer}>{selectedOffer.title}</AppText>
+          <AppText role="value" style={styles.value}>{selectedOffer.value}</AppText>
         </View>
 
         <View style={styles.summary}>
           <View>
-            <Text style={styles.summaryLabel}>Your balance</Text>
-            <Text style={styles.summaryValue}>412 points</Text>
+            <AppText role="caption" style={styles.summaryLabel}>Your balance</AppText>
+            <AppText role="action" style={styles.summaryValue}>412 points</AppText>
           </View>
           <View style={styles.minus}>
-            <Text style={styles.minusText}>−{selectedOffer.points}</Text>
+            <AppText role="action" style={styles.minusText}>−{selectedOffer.points}</AppText>
           </View>
         </View>
 
         <View style={styles.bottom}>
-          <Text style={styles.instruction}>Swipe when staff can see this screen.</Text>
+          <AppText role="body" style={styles.instruction}>Swipe when staff can see this screen.</AppText>
           <View
             accessibilityActions={[{ name: 'activate', label: 'Redeem offer' }]}
             accessibilityLabel={`Swipe to spend ${selectedOffer.points} points`}
@@ -167,14 +168,14 @@ export function RedeemScreen() {
             }}
             style={styles.slider}
           >
-            <Text style={styles.sliderText}>Swipe to redeem</Text>
+            <AppText role="action" style={styles.sliderText}>Swipe to redeem</AppText>
             <GestureDetector gesture={panGesture}>
               <Animated.View style={[styles.thumb, thumbStyle]}>
                 <Text style={styles.thumbText}>→</Text>
               </Animated.View>
             </GestureDetector>
           </View>
-          <Text style={styles.finalCopy}>This action spends Brew Points immediately.</Text>
+          <AppText role="caption" style={styles.finalCopy}>This action spends Brew Points immediately.</AppText>
         </View>
       </View>
     </SafeAreaView>
@@ -211,30 +212,18 @@ const styles = StyleSheet.create({
   },
   partner: {
     color: colors.moss,
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
   },
   location: {
     color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 15,
     marginTop: 4,
   },
   offer: {
     color: colors.ink,
-    fontFamily: fonts.displayExtra,
-    fontSize: 48,
-    letterSpacing: -1.8,
-    lineHeight: 50,
     marginTop: spacing.xl,
     maxWidth: 330,
   },
   value: {
     color: colors.brass,
-    fontFamily: fonts.display,
-    fontSize: 28,
     marginTop: spacing.sm,
   },
   summary: {
@@ -250,13 +239,9 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: 13,
   },
   summaryValue: {
     color: colors.ink,
-    fontFamily: fonts.bold,
-    fontSize: 19,
     marginTop: 3,
   },
   minus: {
@@ -267,16 +252,12 @@ const styles = StyleSheet.create({
   },
   minusText: {
     color: colors.ink,
-    fontFamily: fonts.bold,
-    fontSize: 17,
   },
   bottom: {
     marginTop: 'auto',
   },
   instruction: {
     color: colors.ink,
-    fontFamily: fonts.semibold,
-    fontSize: 16,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
@@ -289,8 +270,6 @@ const styles = StyleSheet.create({
   },
   sliderText: {
     color: colors.card,
-    fontFamily: fonts.bold,
-    fontSize: 17,
     textAlign: 'center',
   },
   thumb: {
@@ -310,8 +289,6 @@ const styles = StyleSheet.create({
   },
   finalCopy: {
     color: colors.muted,
-    fontFamily: fonts.body,
-    fontSize: 12,
     marginTop: spacing.md,
     textAlign: 'center',
   },
@@ -340,23 +317,16 @@ const styles = StyleSheet.create({
   },
   redeemedStatus: {
     color: colors.brassSoft,
-    fontFamily: fonts.bold,
-    fontSize: 13,
     letterSpacing: 2,
     marginTop: spacing.lg,
   },
   redeemedTitle: {
     color: colors.card,
-    fontFamily: fonts.displayExtra,
-    fontSize: 40,
-    letterSpacing: -1.2,
     marginTop: spacing.sm,
     textAlign: 'center',
   },
   redeemedPartner: {
     color: colors.mossSoft,
-    fontFamily: fonts.medium,
-    fontSize: 15,
     marginTop: spacing.sm,
     textAlign: 'center',
   },
@@ -371,8 +341,6 @@ const styles = StyleSheet.create({
   },
   proofLabel: {
     color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: 12,
   },
   proofValue: {
     color: colors.ink,
@@ -386,8 +354,6 @@ const styles = StyleSheet.create({
   },
   staffNote: {
     color: colors.mossSoft,
-    fontFamily: fonts.body,
-    fontSize: 14,
     marginTop: spacing.lg,
   },
   doneButton: {
@@ -400,7 +366,5 @@ const styles = StyleSheet.create({
   },
   doneText: {
     color: colors.ink,
-    fontFamily: fonts.bold,
-    fontSize: 17,
   },
 });

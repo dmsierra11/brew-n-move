@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts } from '../theme/tokens';
+import { AppText } from './AppText';
 
 type PointsBalanceProps = {
   balance?: number;
@@ -12,7 +13,7 @@ export function PointsBalance({ balance = 412 }: Readonly<PointsBalanceProps>) {
       <View style={styles.stamp}>
         <Text style={styles.stampText}>B</Text>
       </View>
-      <Text style={styles.value}>{balance}</Text>
+      <AppText role="action" style={styles.value}>{balance}</AppText>
     </View>
   );
 }
@@ -38,12 +39,5 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.ink,
-    fontFamily: fonts.bold,
-    fontSize: 18,
-  },
-  label: {
-    color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: 13,
   },
 });

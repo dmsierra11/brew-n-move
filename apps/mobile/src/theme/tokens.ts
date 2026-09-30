@@ -23,6 +23,66 @@ export const fonts = {
   bold: 'Figtree_700Bold',
 } as const;
 
+export const typography = {
+  hero: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 74,
+    lineHeight: 84,
+    letterSpacing: -4,
+  },
+  display: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 48,
+    lineHeight: 50,
+    letterSpacing: -1.8,
+  },
+  title: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 40,
+    lineHeight: 44,
+    letterSpacing: -1.2,
+  },
+  stat: {
+    fontFamily: fonts.displayExtra,
+    fontSize: 38,
+    lineHeight: 40,
+  },
+  value: {
+    fontFamily: fonts.display,
+    fontSize: 28,
+    lineHeight: 32,
+  },
+  heading: {
+    fontFamily: fonts.display,
+    fontSize: 21,
+    lineHeight: 24,
+  },
+  action: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  body: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  caption: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  eyebrow: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    lineHeight: 13,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+  },
+} as const;
+
+export type TypographyRole = keyof typeof typography;
+
 export const spacing = {
   xs: 6,
   sm: 10,
