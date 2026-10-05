@@ -13,6 +13,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { HealthProvider } from '../features/health/HealthProvider';
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     BricolageGrotesque_700Bold,
@@ -29,11 +31,13 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="dark" />
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="offer" options={{ headerShown: false, presentation: 'card' }} />
-      </Stack>
+      <HealthProvider>
+        <StatusBar style="dark" />
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="offer" options={{ headerShown: false, presentation: 'card' }} />
+        </Stack>
+      </HealthProvider>
     </GestureHandlerRootView>
   );
 }

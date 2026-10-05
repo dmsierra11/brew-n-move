@@ -5,14 +5,13 @@ import { TabIcon } from '../../components/TabIcon';
 import { colors, fonts } from '../../theme/tokens';
 
 function TodayHeader() {
-  const dublinWeekday = new Intl.DateTimeFormat('en-IE', {
-    timeZone: 'Europe/Dublin',
+  const localWeekday = new Intl.DateTimeFormat('en-IE', {
     weekday: 'long',
   })
     .format(new Date())
     .toUpperCase();
 
-  return <MemberHeader eyebrow={dublinWeekday} title="Today" />;
+  return <MemberHeader eyebrow={localWeekday} title="Today" />;
 }
 
 function RewardsHeader() {

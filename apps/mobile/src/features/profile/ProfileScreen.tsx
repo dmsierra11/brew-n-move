@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,13 +12,9 @@ import Svg, { Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
 import { PillButton } from '../../components/PillButton';
+import { useHealth } from '../health/HealthProvider';
+import { healthPlatformName } from '../health/platform';
 import { colors, radii, spacing, typography } from '../../theme/tokens';
-
-const healthPlatform = Platform.select({
-  android: 'Health Connect',
-  ios: 'Apple Health',
-  default: 'Apple Health',
-});
 
 type ProfileSheet = 'delete-account' | 'health' | null;
 
@@ -41,15 +36,16 @@ function CheckIcon() {
 }
 
 export function ProfileScreen() {
+  const { connect, manage, status } = useHealth();
   const [displayName, setDisplayName] = useState('Daniel');
-  const [healthConnected, setHealthConnected] = useState(false);
   const [activeSheet, setActiveSheet] = useState<ProfileSheet>(null);
+  const healthConnected = status === 'granted';
 
   const handleHealthPress = () => {
     if (healthConnected) {
       setActiveSheet('health');
     } else {
-      setHealthConnected(true);
+      void connect();
     }
   };
 
@@ -90,7 +86,7 @@ export function ProfileScreen() {
           <AppText role="eyebrow" style={styles.groupLabel}>Health</AppText>
           <View style={[styles.card, styles.healthCard]}>
             <View style={styles.healthCopy}>
-              <AppText role="heading">{healthPlatform}</AppText>
+              <AppText role="heading">{healthPlatformName}</AppText>
               <AppText role="caption" style={styles.healthStatus}>
                 {healthConnected
                   ? 'Connected for verified step sync.'
@@ -100,8 +96,8 @@ export function ProfileScreen() {
             <PillButton
               accessibilityLabel={
                 healthConnected
-                  ? `Manage ${healthPlatform} connection`
-                  : `Connect ${healthPlatform}`
+                  ? `Manage ${healthPlatformName} connection`
+                  : `Connect ${healthPlatformName}`
               }
               appearance={healthConnected ? 'muted' : 'primary'}
               label={healthConnected ? 'Connected' : 'Connect'}
@@ -154,26 +150,26 @@ export function ProfileScreen() {
             <View accessibilityElementsHidden style={styles.grabber} />
             <AppText accessibilityRole="header" role="heading">
               {activeSheet === 'health'
-                ? `Manage ${healthPlatform}`
+                ? `Manage ${healthPlatformName}`
                 : 'Delete your account?'}
             </AppText>
             <AppText role="body" style={styles.sheetCopy}>
               {activeSheet === 'health'
-                ? 'Disconnecting stops future step sync. Brew Points you already earned stay in your balance.'
+                ? `Step access is managed in ${healthPlatformName}. Brew Points you already earned stay in your balance.`
                 : 'This will permanently delete your account and associated personal data. Your Brew Points cannot be recovered.'}
             </AppText>
             <View style={styles.sheetActions}>
               <PillButton
-                appearance="danger"
+                appearance={activeSheet === 'health' ? 'primary' : 'danger'}
                 fullWidth
                 label={
                   activeSheet === 'health'
-                    ? 'Disconnect step sync'
+                    ? `Open ${healthPlatformName}`
                     : 'Delete account'
                 }
                 onPress={() => {
                   if (activeSheet === 'health') {
-                    setHealthConnected(false);
+                    void manage();
                   }
                   setActiveSheet(null);
                 }}

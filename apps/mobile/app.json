@@ -21,6 +21,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "package": "com.brewandmove.app",
+      "permissions": [
+        "android.permission.health.READ_STEPS"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -36,7 +40,27 @@
     },
     "owner": "dmsierra11",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Brew & Move reads today’s step count from Apple Health so you can see your progress toward Brew Points.",
+          "NSHealthUpdateUsageDescription": "Brew & Move does not write health data. This permission is unused.",
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "manifestQueries": {
+              "package": ["com.google.android.apps.healthdata"]
+            },
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ]
   }
 }

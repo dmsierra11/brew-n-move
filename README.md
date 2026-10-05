@@ -15,7 +15,7 @@ Member and admin apps share one Supabase project.
 | `supabase`    | Postgres, auth, authorization policies, and Edge Functions. |
 | `solana`      | Devnet rewards ledger.                                      |
 
-The apps are still starter screens. Sign-up, step sync, rewards, and redemption are not built yet.
+The member app can connect Apple Health or Health Connect and show today’s local-day step total. Sign-up, validation, rewards data, and redemption are not built yet.
 
 ## Prerequisites
 
@@ -68,15 +68,26 @@ Members sign up with email and password, Sign in with Apple, or Sign in with Goo
 
 ### Earning
 
-A day is the `Europe/Dublin` calendar day. Only steps taken after both sign-up and health permission count. iOS reads Apple HealthKit. Android reads Health Connect. Steps taken while the app is closed count on the next sync.
+A day is the calendar day in the member's current device timezone. iOS reads Apple Health and Android reads Health Connect. The app reads the health store's total for the current local day, including steps taken while the app was closed. It stores daily totals rather than individual step samples.
 
-For each member and each Dublin day:
+The member explicitly validates a reached milestone before local midnight to convert it into Brew Points. A later validation on the same day awards only the difference to the highest newly reached milestone. An unvalidated day closes at midnight and cannot be recovered. Brew Points already in the balance do not expire.
 
-```text
-dailyPoints = min(floor(verifiedDailySteps / 100), 100)
-```
+The provisional milestone ladder is:
 
-100 verified steps earn 1 Brew Point. The daily maximum is 100 Brew Points, at 10,000 steps. That 10,000-step limit is a provisional cap. Adjust it once the points cost of rewards is known and we can see how members actually use the app, so extra walking still feels worthwhile. There is no weekly cap, and leftover steps do not roll into the next day. A later sync updates that day's entitlement. It does not award the day again.
+| Steps | Brew Points |
+| ----: | ----------: |
+| 2,500 | 25 |
+| 5,000 | 50 |
+| 7,500 | 75 |
+| 10,000 | 100 |
+| 12,500 | 125 |
+| 15,000 | 150 |
+| 17,500 | 175 |
+| 20,000 | 200 |
+
+Steps below 2,500 do not reach a milestone. The daily maximum is provisionally 200 Brew Points at 20,000 steps. These rates and offer costs are experiments: adjust them after learning what participating businesses will provide to their communities and how members use the product. The current anchor is one specialty coffee, approximately €4.50, for 200 Brew Points.
+
+The same ladder lives in [`apps/mobile/src/features/earning/milestones.ts`](apps/mobile/src/features/earning/milestones.ts). Today reads it for the next milestone and the points it pays. Change the list there rather than duplicating thresholds in screens. Later validation should award from that list. Reprice a coffee on the offer itself; that does not require a new earning formula.
 
 ### Redemption
 

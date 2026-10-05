@@ -71,7 +71,7 @@ Motion makes earning feel light and never adds a step.
 - Use one orchestrated moment instead of scattered bouncing elements.
 - Use Reanimated shared values and the presets in `apps/mobile/src/motion/presets.ts` for member-app motion. Use Gesture Handler for gesture-driven motion; do not introduce React Native `Animated` or `PanResponder`.
 
-Do not add a mascot, coins, streaks, levels, ads, jackpots, or a “validate my steps” action. Do not imitate Duolingo characters or Macadam artwork.
+Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Duolingo characters or Macadam artwork.
 
 ## Screen patterns
 
@@ -79,11 +79,12 @@ Do not add a mascot, coins, streaks, levels, ads, jackpots, or a “validate my 
 
 - Show the points stamp in the header.
 - Make today's verified steps the dominant number.
-- Show Brew Points earned today nearby.
-- Explain that 100 steps earn 1 Brew Point.
+- Show the Brew Points available at the highest milestone reached.
+- Keep the provisional milestone ladder separate from presentation so rates can change after partner testing.
 - Name the next meaningful milestone and state the remaining steps.
 - Celebrate crossing a milestone without blocking the screen.
-- Show the 10,000-step daily cap without implying that steps beyond it disappear.
+- Show the provisional 20,000-step daily cap without implying that steps beyond it disappear.
+- When validation is implemented, make Validate the one primary action and state that the local day closes at midnight.
 
 ### Rewards
 
