@@ -108,8 +108,9 @@ Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Du
 
 ### Profile
 
-- Group Account, Health, and Account management under eyebrow labels.
-- Show email as read-only and let the member edit their display name.
+- A guest sees a sign-in and create-account invitation. Do not show a sample email, display name, sign-out, or delete action to a guest.
+- For an onboarded member, group Account, Health, and Account management under eyebrow labels.
+- Show email and first name as read-only and let the member edit their display name.
 - Show the detected health platform and a direct connection status. Connect is primary; Connected is muted and opens management rather than disconnecting immediately.
 - Use a quiet sign-out action. Reserve blocked red for unavailable or destructive states that need warning.
 - Put Delete account under Account management as a danger-quiet entry point, then require a bottom-sheet confirmation with a filled danger action.
@@ -121,10 +122,11 @@ This is a café handoff screen. Speed and legibility outrank decoration.
 
 - Remove the tab bar.
 - Make partner, location, offer, discount, and points readable before the gesture.
-- Use exactly one instruction: “Swipe when staff can see this screen.”
-- Keep one swipe action with a large target.
+- Until redemption is implemented, keep the offer readable and label the screen as a demo. Do not show a Redeemed success, countdown, or staff confirmation.
+- When redemption is implemented, use exactly one instruction: “Swipe when staff can see this screen.”
+- When redemption is implemented, keep one swipe action with a large target.
 - Show no celebration before the swipe.
-- After success, show Redeemed immediately with reward, location, redemption time, and a five-minute countdown.
+- When redemption is implemented, after success show Redeemed immediately with reward, location, redemption time, and a five-minute countdown.
 - Location and balance checks happen before this screen. If they fail, show a direct explanation and next action.
 
 ## Celebration

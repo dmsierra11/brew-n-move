@@ -15,7 +15,7 @@ Member and admin apps share one Supabase project.
 | `supabase`    | Postgres, auth, authorization policies, and Edge Functions. |
 | `solana`      | Devnet rewards ledger.                                      |
 
-The member app can connect Apple Health or Health Connect and show today’s local-day step total. Sign-up, validation, rewards data, and redemption are not built yet.
+The app opens without an account. Guests can connect Apple Health or Health Connect, view today’s step total, and browse offers. Validating steps and redemption require a signed-in member who has finished onboarding. The demo signs in with email and password. Validation, rewards data, and redemption are not built yet.
 
 ## Prerequisites
 
@@ -27,6 +27,8 @@ The member app can connect Apple Health or Health Connect and show today’s loc
 Health integrations need an Expo development build. Expo Go does not include HealthKit or Health Connect.
 
 ## Getting started
+
+The member app reads `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from `apps/mobile/.env`. Copy `apps/mobile/.env.example` and fill in the hosted project values. Do not commit that file or a service-role key. The hosted project is Brew & Move in Maurique Labs (`eqkhuekmhixivwiswwcx`, eu-west-1). In Authentication, Confirm email stays off. Sign-up also confirms the Auth login email so a session can start even if that toggle is still on. After onboarding, the app sends a verification email. Set `RESEND_API_KEY` and `EMAIL_FROM` as Edge Function secrets (`supabase/functions/.env.example`). An unconfirmed address does not block onboarding or step validation.
 
 From the repository root:
 
@@ -46,11 +48,41 @@ Admin app (Vite, usually http://localhost:5173):
 pnpm admin
 ```
 
-iOS development build through EAS:
+`apps/mobile/ios` and `apps/mobile/android` are generated. Configure native behavior in `app.json` and config plugins.
+
+### Physical iPhone
+
+Expo Go cannot run this app. HealthKit needs a development build. Register the phone once before the first iOS cloud build:
+
+```bash
+pnpm eas:device
+```
+
+Then:
 
 ```bash
 pnpm eas:build:ios
 ```
+
+When the build finishes, open the install link on the iPhone in Safari, or scan the QR that EAS prints. The Metro QR code does not install the app; it only loads JavaScript into a development build that is already on the phone. A phone registered after that build cannot install it. Register it, then build again.
+
+If iOS blocks the app, go to **Settings → General → VPN & Device Management**, trust the developer certificate, and turn on **Developer Mode** under **Settings → Privacy & Security** if iOS asks (a restart is required). Keep the phone on the same Wi-Fi as the Mac.
+
+Leave `pnpm mobile` running. Opening **Brew & Move** from the Home screen shows a launcher. That screen often cannot discover Metro on its own. Connect with one of these:
+
+1. On the iPhone, open the Camera app and scan the QR code from the Metro terminal. Do not use Expo Go.
+2. In the launcher, enter the URL Metro prints, for example `http://192.168.10.49:8081`.
+3. If iOS asked, allow **Local Network** for Brew & Move under **Settings → Privacy & Security → Local Network**.
+
+If the phone still cannot reach Metro (guest Wi-Fi, client isolation, or a different network), start a tunnel instead:
+
+```bash
+pnpm mobile:tunnel
+```
+
+Then scan the new QR code. A tunnel is slower than LAN, but it does not need the phone and Mac to share a local network.
+
+Saving a file reloads the app. Rebuild with `pnpm eas:build:ios` only when native dependencies or `apps/mobile/app.json` change.
 
 A local native run, after the iOS project has been generated:
 
@@ -58,13 +90,25 @@ A local native run, after the iOS project has been generated:
 pnpm --filter mobile ios
 ```
 
-`apps/mobile/ios` and `apps/mobile/android` are generated. Configure native behavior in `app.json` and config plugins.
+### Physical Android
+
+Install Health Connect, enable USB debugging, connect the phone, then:
+
+```bash
+pnpm --filter mobile android --device
+```
+
+That generates `apps/mobile/android`, builds locally, and installs. A cloud development build:
+
+```bash
+pnpm eas:build:android
+```
 
 ## Product
 
 The MVP covers sign-up, step-based earning, a rewards list, community joining, member-initiated in-person redemption, and internal admin management. Joining is a lightweight association in the MVP and does not gate earning or standard rewards.
 
-Members sign up with email and password, Sign in with Apple, or Sign in with Google. Onboarding collects a first name and a display name. The interface shows Brew Points only.
+Members sign up with email and password, Sign in with Apple, or Sign in with Google. The current demo implements email and password. Sign in with Apple, Sign in with Google, password recovery, and account deletion remain required before production. Onboarding collects a first name and a display name. After onboarding, Brew & Move emails a verification link. Profile shows a reminder with resend until the link is opened. An unconfirmed address does not block step validation. The interface shows Brew Points only.
 
 ### Earning
 

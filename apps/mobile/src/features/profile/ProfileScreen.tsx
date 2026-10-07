@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -12,6 +13,8 @@ import Svg, { Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
 import { PillButton } from '../../components/PillButton';
+import { useAuth } from '../auth/AuthProvider';
+import { requestEmailVerification } from '../auth/emailVerification';
 import { useHealth } from '../health/HealthProvider';
 import { healthPlatformName } from '../health/platform';
 import { colors, radii, spacing, typography } from '../../theme/tokens';
@@ -37,9 +40,27 @@ function CheckIcon() {
 
 export function ProfileScreen() {
   const { connect, manage, status } = useHealth();
-  const [displayName, setDisplayName] = useState('Daniel');
+  const {
+    email,
+    member,
+    profileStatus,
+    refreshMember,
+    retryProfile,
+    sessionStatus,
+    signOut,
+    updateDisplayName,
+  } = useAuth();
+  const [displayName, setDisplayName] = useState('');
+  const [nameMessage, setNameMessage] = useState('');
+  const [verifyMessage, setVerifyMessage] = useState('');
+  const [verifyFailed, setVerifyFailed] = useState(false);
+  const [verifySending, setVerifySending] = useState(false);
   const [activeSheet, setActiveSheet] = useState<ProfileSheet>(null);
   const healthConnected = status === 'granted';
+
+  useEffect(() => {
+    setDisplayName(member?.displayName ?? '');
+  }, [member?.displayName]);
 
   const handleHealthPress = () => {
     if (healthConnected) {
@@ -47,6 +68,126 @@ export function ProfileScreen() {
     } else {
       void connect();
     }
+  };
+
+  if (sessionStatus === 'loading' || (sessionStatus === 'signedIn' && profileStatus === 'loading')) {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.guest}>
+          <AppText role="body">Loading your account</AppText>
+        </View>
+      </View>
+    );
+  }
+
+  if (sessionStatus === 'guest') {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.guest}>
+          <AppText accessibilityRole="header" role="heading">Save your walks</AppText>
+          <AppText role="body" style={styles.guestCopy}>
+            Create an account when you want to validate steps or redeem a reward. You can look around first.
+          </AppText>
+          <PillButton
+            appearance="primary"
+            fullWidth
+            label="Create account"
+            onPress={() => router.push('/sign-up')}
+          />
+          <PillButton
+            appearance="quiet"
+            fullWidth
+            label="Sign in"
+            onPress={() => router.push('/sign-in')}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  if (profileStatus === 'missing') {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.guest}>
+          <AppText role="heading">Finish your account</AppText>
+          <AppText role="body" style={styles.guestCopy}>
+            Add your name to continue. This does not issue Brew Points.
+          </AppText>
+          <PillButton
+            appearance="primary"
+            fullWidth
+            label="Continue"
+            onPress={() => router.push('/onboarding')}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  if (profileStatus === 'error' || !member) {
+    return (
+      <View style={styles.screen}>
+        <View style={styles.guest}>
+          <AppText role="heading">Account unavailable</AppText>
+          <AppText role="body" style={styles.guestCopy}>
+            We could not load your account. Your session stays on this phone.
+          </AppText>
+          <PillButton
+            appearance="primary"
+            fullWidth
+            label="Try again"
+            onPress={() => {
+              void retryProfile();
+            }}
+          />
+          <PillButton
+            appearance="quiet"
+            fullWidth
+            label="Sign out"
+            onPress={() => {
+              void signOut();
+            }}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  const saveDisplayName = () => {
+    const next = displayName.trim();
+    if (!next || next === member.displayName) {
+      setDisplayName(member.displayName);
+      setNameMessage('');
+      return;
+    }
+
+    void updateDisplayName(next).then((error) => {
+      setNameMessage(error ?? '');
+      if (error) {
+        setDisplayName(member.displayName);
+      }
+    });
+  };
+
+  const resendVerification = () => {
+    setVerifySending(true);
+    setVerifyMessage('');
+    void requestEmailVerification().then((result) => {
+      setVerifySending(false);
+      if (result.sent) {
+        setVerifyFailed(false);
+        setVerifyMessage('We sent a verification email.');
+        return;
+      }
+
+      if (result.error) {
+        setVerifyFailed(true);
+        setVerifyMessage(result.error);
+        return;
+      }
+
+      void refreshMember();
+    });
   };
 
   return (
@@ -58,10 +199,34 @@ export function ProfileScreen() {
       >
         <View style={styles.group}>
           <AppText role="eyebrow" style={styles.groupLabel}>Account</AppText>
+          {member.emailVerifiedAt ? null : (
+            <View style={[styles.card, styles.verifyCard]}>
+              <AppText role="heading">Verify your email</AppText>
+              <AppText role="caption" style={styles.healthStatus}>
+                Verify this email so we can recover your account.
+              </AppText>
+              {verifyMessage ? (
+                <AppText role="caption" style={verifyFailed ? styles.nameError : styles.fieldNote}>
+                  {verifyMessage}
+                </AppText>
+              ) : null}
+              <PillButton
+                appearance="primary"
+                fullWidth
+                label={verifySending ? 'Sending' : 'Resend'}
+                onPress={resendVerification}
+              />
+            </View>
+          )}
           <View style={styles.card}>
             <View style={styles.row}>
               <AppText role="caption" style={styles.fieldLabel}>Email</AppText>
-              <AppText role="body">daniel@example.com</AppText>
+              <AppText role="body">{email}</AppText>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <AppText role="caption" style={styles.fieldLabel}>First name</AppText>
+              <AppText role="body">{member.firstName}</AppText>
             </View>
             <View style={styles.divider} />
             <View style={styles.row}>
@@ -70,13 +235,14 @@ export function ProfileScreen() {
                 accessibilityLabel="Display name"
                 autoCapitalize="words"
                 onChangeText={setDisplayName}
+                onEndEditing={saveDisplayName}
                 returnKeyType="done"
                 selectionColor={colors.moss}
                 style={styles.input}
                 value={displayName}
               />
-              <AppText role="caption" style={styles.fieldNote}>
-                This is how your name appears in communities.
+              <AppText role="caption" style={[styles.fieldNote, nameMessage ? styles.nameError : null]}>
+                {nameMessage || 'This is how your name appears in communities.'}
               </AppText>
             </View>
           </View>
@@ -115,7 +281,9 @@ export function ProfileScreen() {
               appearance="quiet"
               fullWidth
               label="Sign out"
-              onPress={() => undefined}
+              onPress={() => {
+                void signOut();
+              }}
             />
             <PillButton
               accessibilityLabel="Delete Brew & Move account"
@@ -193,6 +361,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.field,
     flex: 1,
   },
+  guest: {
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  guestCopy: {
+    color: colors.muted,
+  },
   content: {
     gap: spacing.xl,
     paddingBottom: spacing.xxl,
@@ -222,6 +397,13 @@ const styles = StyleSheet.create({
   fieldNote: {
     color: colors.muted,
     marginTop: spacing.xs,
+  },
+  verifyCard: {
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  nameError: {
+    color: colors.blocked,
   },
   divider: {
     backgroundColor: colors.line,

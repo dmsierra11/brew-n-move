@@ -13,6 +13,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { AuthProvider } from '../features/auth/AuthProvider';
 import { HealthProvider } from '../features/health/HealthProvider';
 
 export default function RootLayout() {
@@ -31,13 +32,19 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HealthProvider>
-        <StatusBar style="dark" />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="offer" options={{ headerShown: false, presentation: 'card' }} />
-        </Stack>
-      </HealthProvider>
+      <AuthProvider>
+        <HealthProvider>
+          <StatusBar style="dark" />
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="offer" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="sign-in" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="sign-up" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="legal-document" options={{ headerShown: false, presentation: 'card' }} />
+          </Stack>
+        </HealthProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

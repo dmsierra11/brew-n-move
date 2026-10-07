@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
+import { useAuth } from '../auth/AuthProvider';
 import { PillButton } from '../../components/PillButton';
 import { colors, radii, spacing } from '../../theme/tokens';
 import {
@@ -75,10 +76,15 @@ function ChevronDown() {
 }
 
 export function CommunitiesScreen() {
-  const [joined, setJoined] = useState<Set<string>>(
-    () => new Set(['canal-runners', 'docklands-mornings']),
-  );
+  const { beginAccountAction, profileStatus, sessionStatus, userId } = useAuth();
+  const accountReady = sessionStatus === 'signedIn' && profileStatus === 'ready';
+  const [joined, setJoined] = useState<Set<string>>(new Set());
   const [pendingLeave, setPendingLeave] = useState<Community | null>(null);
+
+  useEffect(() => {
+    setJoined(new Set());
+    setPendingLeave(null);
+  }, [userId]);
 
   const joinCommunity = (id: string) => {
     setJoined((current) => {
@@ -148,9 +154,15 @@ export function CommunitiesScreen() {
                       onPress={() => {
                         if (isJoined) {
                           setPendingLeave(community);
-                        } else {
-                          joinCommunity(community.id);
+                          return;
                         }
+
+                        if (!accountReady) {
+                          beginAccountAction({ type: 'join' });
+                          return;
+                        }
+
+                        joinCommunity(community.id);
                       }}
                       selected={isJoined}
                       trailing={isJoined ? <ChevronDown /> : undefined}

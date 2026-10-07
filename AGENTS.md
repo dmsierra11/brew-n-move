@@ -65,13 +65,23 @@ Prefer clear, small feature boundaries over speculative abstractions. Do not add
 - Ledger: Solana devnet. Brew & Move creates a custodial account per member and sponsors fees. Use a record format that can move to mainnet later without a redesign.
 - The interface shows Brew Points. Do not show wallets, seed phrases, SOL, transaction approval, or chain jargon.
 
+## Opening the app
+
+The app opens without an account. Guests are not anonymous Auth users.
+
+Guests can connect health permissions, view today's device step total, and browse standard offers and offer details. Joining a community, validating steps, and redemption require a signed-in member who has finished onboarding.
+
+After sign-in or onboarding, return the member to the action they were attempting. Recheck the prerequisites that already exist. Do not issue Brew Points or record a redemption as part of that return.
+
+Viewing today's health-store total does not require an account and does not create a validation record. Submitting a validation does. The first validation of the current local day includes that day's health-store total, including steps taken before sign-up and before health permission was granted. Previous days cannot be validated.
+
 ## Sign-up and profile
 
-Members sign up with email and password, Sign in with Apple, or Sign in with Google.
+Members sign up with email and password, Sign in with Apple, or Sign in with Google. The current demo implements email and password. Sign in with Apple and Sign in with Google remain required before production.
 
 The sign-up form collects:
 
-- Email address, used for authentication, verification, and account recovery
+- Email address, used for authentication, verification, and account recovery. Sign-up confirms the Auth login email so a session can start. After onboarding, Brew & Move emails a verification link. An unconfirmed address does not block onboarding or step validation. Profile shows a reminder with resend until the link is opened. Supabase Confirm email stays off.
 - Password, for email sign-up only
 - Acceptance of the Terms of Service
 - Acknowledgement of the Privacy Policy
@@ -85,13 +95,15 @@ Do not collect surname, username, phone number, gender, full date of birth, home
 
 Detect timezone, country or region, and health platform from the device. Do not ask the member to type them. Request HealthKit or Health Connect permission when step tracking is introduced, not on the sign-up form.
 
-Profile must provide a readily discoverable way to initiate account deletion. Deletion is permanent, requires confirmation, and must remove the account and associated personal data except records that Brew & Move is legally required to retain. Retention must be disclosed. The production deletion flow and external web request path are implemented with the auth and backend slice; a visual prototype must not be treated as a working deletion service.
+A guest Profile shows a sign-in and create-account invitation. An onboarded member's Profile shows the account email, a read-only first name, an editable display name, a verification reminder until the email is confirmed, health access, sign-out, and account deletion.
+
+Profile must provide a readily discoverable way to initiate account deletion. Deletion is permanent, requires confirmation, and must remove the account and associated personal data except records that Brew & Move is legally required to retain. Retention must be disclosed. The production deletion flow and external web request path remain required. The current confirmation sheet is a visual prototype and must not be treated as a working deletion service.
 
 ## Earning
 
 A day is the calendar day in the member's current device timezone. The open day follows the phone if the member travels.
 
-Apple Health or Health Connect provides the current local day's total, including steps taken before health access was connected that day and eligible steps taken while the app was closed. Previous days cannot be validated.
+Apple Health or Health Connect provides the current local day's total, including steps taken before health access was connected that day, steps taken before sign-up that day, and eligible steps taken while the app was closed. Previous days cannot be validated. Viewing that total does not require an account. Submitting a validation does.
 
 The member explicitly validates the highest milestone reached before local midnight. A later validation on the same day awards only the difference to a newly reached milestone. An unvalidated day closes at midnight and cannot be recovered. Earned Brew Points stay in the balance until redeemed.
 
@@ -137,6 +149,8 @@ An offer may have an optional total quantity and an optional expiry. If neither 
 
 Redemption is started by the member. Café staff check the confirmation visually and apply the discount on the café till. Brew & Move does not ask staff to use software.
 
+The member must be signed in and have finished onboarding before the location read. A guest may open the offer detail. Choosing redeem sends them through sign-in and onboarding, then back to the offer. That return rechecks the session and member row. It does not read location, spend points, or record a redemption by itself. Until the redemption service exists, the offer screen stays a demo and must not show a real redemption success.
+
 1. The member opens the offer.
 2. Immediately before showing Swipe to redeem, the app reads the current device location.
 3. The device must be within 100 metres of that location's stored coordinates, and the member must have enough Brew Points.
@@ -152,7 +166,7 @@ Redemption is started by the member. Café staff check the confirmation visually
 
 Supabase Edge Functions are the entry point for step sync and redemption. Postgres functions apply each balance change and its Supabase record atomically.
 
-The member app may submit a step sync or request a redemption. The admin app may manage partners, locations, offers, and communities. Neither client may set Brew Points, write redemption records, or write Solana records directly.
+Only a signed-in member who has finished onboarding may submit a step sync or request a redemption. Email verification is not a prerequisite for those writes. The member app may submit a step sync or request a redemption. The admin app may manage partners, locations, offers, and communities. Neither client may set Brew Points, write redemption records, or write Solana records directly.
 
 Server-side code validates the request, applies the earning or redemption rules, records the result, and then submits the Solana devnet record. Brew & Move sponsors the fee.
 

@@ -55,12 +55,16 @@
         {
           "android": {
             "manifestQueries": {
-              "package": ["com.google.android.apps.healthdata"]
+              "package": [
+                "com.google.android.apps.healthdata"
+              ]
             },
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-localization"
     ]
   }
 }

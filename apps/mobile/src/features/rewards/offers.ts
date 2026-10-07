@@ -1,5 +1,8 @@
 import type { IllustrationKind } from '../../components/OfferIllustration';
 
+// Guests read this local list. A later database read for anon may expose only
+// id, partner, location name, title, value label, and points cost.
+
 export type Offer = {
   id: string;
   partner: string;

@@ -7,7 +7,7 @@ type PointsBalanceProps = {
   balance?: number;
 };
 
-export function PointsBalance({ balance = 412 }: Readonly<PointsBalanceProps>) {
+export function PointsBalance({ balance = 0 }: Readonly<PointsBalanceProps>) {
   return (
     <View style={styles.container} accessibilityLabel={`${balance} Brew Points`}>
       <View style={styles.stamp}>
