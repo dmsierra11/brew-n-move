@@ -82,33 +82,144 @@ export type Database = {
         };
         Relationships: [];
       };
+      partners: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+        };
+        Relationships: [];
+      };
+      locations: {
+        Row: {
+          id: string;
+          partner_id: string;
+          name: string;
+          address: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          partner_id: string;
+          name: string;
+          address?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          address?: string | null;
+        };
+        Relationships: [];
+      };
+      offers: {
+        Row: {
+          id: string;
+          location_id: string;
+          slug: string;
+          title: string;
+          value_label: string;
+          points_cost: number;
+          description: string;
+          list_price_cents: number;
+          pay_price_cents: number;
+          collect_start: string | null;
+          collect_end: string | null;
+          image_url: string | null;
+          quantity: number | null;
+          expires_at: string | null;
+          status: 'active' | 'paused' | 'removed';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          location_id: string;
+          slug: string;
+          title: string;
+          value_label: string;
+          points_cost: number;
+          description: string;
+          list_price_cents: number;
+          pay_price_cents: number;
+          collect_start?: string | null;
+          collect_end?: string | null;
+          image_url?: string | null;
+          quantity?: number | null;
+          expires_at?: string | null;
+          status?: 'active' | 'paused' | 'removed';
+          created_at?: string;
+        };
+        Update: {
+          title?: string;
+          value_label?: string;
+          points_cost?: number;
+          description?: string;
+          list_price_cents?: number;
+          pay_price_cents?: number;
+          collect_start?: string | null;
+          collect_end?: string | null;
+          image_url?: string | null;
+          quantity?: number | null;
+          expires_at?: string | null;
+          status?: 'active' | 'paused' | 'removed';
+        };
+        Relationships: [];
+      };
+      redemptions: {
+        Row: {
+          id: string;
+          member_id: string;
+          partner_id: string;
+          location_id: string;
+          offer_id: string;
+          partner_name: string;
+          location_name: string;
+          offer_title: string;
+          points_spent: number;
+          value_label: string;
+          redeemed_at: string;
+          client_request_id: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       step_validations: {
         Row: {
           id: string;
           member_id: string;
           local_date: string;
           timezone: string;
-          step_total: number;
+          step_total: number | null;
           source_platform: 'apple_health' | 'health_connect';
           awarded_points: number;
           validated_at: string;
           window_start: string;
           window_end: string;
+          anchor_id: string;
         };
         Insert: {
           id?: string;
           member_id: string;
           local_date: string;
           timezone: string;
-          step_total: number;
+          step_total?: number | null;
           source_platform: 'apple_health' | 'health_connect';
           awarded_points: number;
           validated_at?: string;
           window_start: string;
           window_end: string;
+          anchor_id?: string;
         };
         Update: {
-          step_total?: number;
+          step_total?: number | null;
           source_platform?: 'apple_health' | 'health_connect';
           awarded_points?: number;
           validated_at?: string;
@@ -116,7 +227,27 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      catalog_offers: {
+        Row: {
+          id: string;
+          slug: string;
+          partner_name: string;
+          location_name: string;
+          title: string;
+          value_label: string;
+          points_cost: number;
+          location_address: string | null;
+          description: string;
+          list_price_cents: number;
+          pay_price_cents: number;
+          collect_start: string | null;
+          collect_end: string | null;
+          image_url: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -35,7 +35,7 @@ export type MemberProfile = {
 export type AccountIntent =
   | { type: 'activity' }
   | { type: 'join' }
-  | { type: 'redeem' }
+  | { type: 'redeem'; offerId: string }
   | { type: 'validate' }
   | null;
 
@@ -94,7 +94,7 @@ async function readStoredSession() {
 
 function routeForIntent(intent: AccountIntent) {
   if (intent?.type === 'redeem') {
-    return '/offer' as const;
+    return { pathname: '/offer' as const, params: { id: intent.offerId } };
   }
 
   if (intent?.type === 'validate') {

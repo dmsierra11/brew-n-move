@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
@@ -48,6 +48,10 @@ const communities: Community[] = [
   },
 ];
 
+async function readCommunities() {
+  return communities;
+}
+
 function MembersIcon() {
   return (
     <Svg height={24} viewBox="0 0 28 24" width={28}>
@@ -78,8 +82,19 @@ function ChevronDown() {
 export function CommunitiesScreen() {
   const { beginAccountAction, profileStatus, sessionStatus, userId } = useAuth();
   const accountReady = sessionStatus === 'signedIn' && profileStatus === 'ready';
+  const [catalog, setCatalog] = useState(communities);
   const [joined, setJoined] = useState<Set<string>>(new Set());
   const [pendingLeave, setPendingLeave] = useState<Community | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      setCatalog(await readCommunities());
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     setJoined(new Set());
@@ -109,18 +124,33 @@ export function CommunitiesScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        alwaysBounceVertical
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            colors={[colors.moss]}
+            onRefresh={() => {
+              void refresh();
+            }}
+            progressBackgroundColor={colors.card}
+            refreshing={refreshing}
+            tintColor={colors.moss}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         <AppText role="body" style={styles.intro}>
           Find your people, then move together. Join as many communities as you like.
         </AppText>
 
-        {communities.length === 0 ? (
+        {catalog.length === 0 ? (
           <AppText role="caption" style={styles.empty}>
             Communities will appear here when they are available.
           </AppText>
         ) : (
           <View style={styles.list}>
-            {communities.map((community) => {
+            {catalog.map((community) => {
               const isJoined = joined.has(community.id);
 
               return (

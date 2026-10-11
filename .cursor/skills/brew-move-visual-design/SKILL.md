@@ -1,6 +1,6 @@
 ---
 name: brew-move-visual-design
-description: Defines Brew & Move member-app visual design, typography, colour, cards, motion, celebration, and café redemption patterns. Use when creating or changing Brew & Move mobile screens, components, navigation, rewards, earning, or redemption UI.
+description: Defines Brew & Move member-app visual design, typography, colour, cards, lists, motion, celebration, and café redemption patterns. Use when creating or changing Brew & Move mobile screens, components, navigation, rewards, earning, activity, or redemption UI.
 ---
 
 # Brew & Move visual design
@@ -75,11 +75,20 @@ Motion makes earning feel light and never adds a step.
 
 Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Duolingo characters or Macadam artwork.
 
+## Lists
+
+A screen that shows a list of records usually needs pull-to-refresh. Focus reload is not enough when the member can change data elsewhere and stay on the list, or return without remounting.
+
+Match Rewards and Communities: `RefreshControl` with moss tint, a card-coloured progress background, and `alwaysBounceVertical` so a short list still pulls.
+
+If it is unclear whether a list should refresh, ask before shipping without it.
+
 ## Screen patterns
 
 ### Today
 
 - Show the points stamp in the header. Tapping it opens validation history.
+- Activity lists each validation’s added points, time, and step total. A later validation on the same day is another row. It also lists each redemption’s offer, time, partner, and points spent. Pull down to refresh the list and the balance.
 - Make today's verified steps the dominant number.
 - Keep the provisional milestone ladder in data. Draw every rung on a horizontal track the member can scroll, with steps and points on each stop.
 - Name the next meaningful milestone and state the remaining steps.
@@ -95,9 +104,11 @@ Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Du
 - Do not call the list “Nearby.”
 - Omit distance until location permission has already been granted.
 - Sort the no-location list stably, such as by partner name.
-- Each card shows partner, offer, discount or value, and points cost.
-- Give each offer a distinct original café illustration; do not repeat one placeholder icon.
-- Begin redemption from offer detail.
+- Each card is image-led. Use the partner photo when one is stored, and that offer’s own café illustration when it is not. Do not repeat one placeholder icon.
+- Under the image, show the business name, a short description, a favourite control, the full price, the discounted price, and the Brew Points cost. Favourites are not saved yet.
+- Show a collect time only when the offer has one. Most offers do not.
+- Omit ratings.
+- Begin redemption from offer detail. The detail opens on the same wide image, then the business name and address, the optional collect time, About this offer, and Collection instructions. Keep the full price and discounted price in a footer with the redeem action.
 
 ### Communities
 
@@ -123,14 +134,13 @@ Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Du
 
 This is a café handoff screen. Speed and legibility outrank decoration.
 
-- Remove the tab bar.
+- Remove the tab bar. Keep the Brew Points stamp in the header.
 - Make partner, location, offer, discount, and points readable before the gesture.
-- Until redemption is implemented, keep the offer readable and label the screen as a demo. Do not show a Redeemed success, countdown, or staff confirmation.
-- When redemption is implemented, use exactly one instruction: “Swipe when staff can see this screen.”
-- When redemption is implemented, keep one swipe action with a large target.
-- Show no celebration before the swipe.
-- When redemption is implemented, after success show Redeemed immediately with reward, location, redemption time, and a five-minute countdown.
-- Location and balance checks happen before this screen. If they fail, show a direct explanation and next action.
+- Use exactly one instruction: “Swipe when staff can see this screen.”
+- Keep one swipe action with a large target.
+- Show no celebration before the swipe. Releasing early does not submit.
+- After a confirmed server result, show Redeemed immediately with reward, location, redemption time, and a five-minute countdown. After five minutes, show Expired. The points stay spent.
+- Location and balance checks happen before the swipe and again on the completed swipe. If they fail, show a direct explanation and next action.
 
 ## Celebration
 
@@ -145,4 +155,5 @@ Celebrate a completed economic event once. Use a short colour or type transition
 - Does motion help comprehension and respect reduced motion?
 - Does every offer illustration feel distinct while belonging to the same café world?
 - Are Macadam-specific game mechanics and artwork absent?
+- Does a list screen refresh, or was it confirmed that it should not?
 - Does the result still follow Brew & Move product rules?

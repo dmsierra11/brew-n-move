@@ -5,7 +5,9 @@ import { colors } from '../theme/tokens';
 export type IllustrationKind = 'flat-white' | 'coffee-pastry' | 'lunch';
 
 type OfferIllustrationProps = {
+  height?: number;
   kind: IllustrationKind;
+  width?: number;
 };
 
 const line = {
@@ -16,10 +18,10 @@ const line = {
   strokeWidth: 2.2,
 };
 
-export function OfferIllustration({ kind }: OfferIllustrationProps) {
+export function OfferIllustration({ height = 104, kind, width = 96 }: OfferIllustrationProps) {
   if (kind === 'flat-white') {
     return (
-      <Svg height={104} viewBox="0 0 96 104" width={96}>
+      <Svg height={height} viewBox="0 0 96 104" width={width}>
         <Path d="M9 83c12-10 22-9 31-2s19 9 34-3" stroke={colors.moss} strokeDasharray="3 6" strokeLinecap="round" strokeWidth="2.6" />
         <Circle cx="77" cy="76" fill={colors.brass} r="5" />
         <Ellipse cx="47" cy="53" fill={colors.card} rx="28" ry="22" stroke={colors.ink} strokeWidth="2.2" />
@@ -33,7 +35,7 @@ export function OfferIllustration({ kind }: OfferIllustrationProps) {
 
   if (kind === 'coffee-pastry') {
     return (
-      <Svg height={104} viewBox="0 0 96 104" width={96}>
+      <Svg height={height} viewBox="0 0 96 104" width={width}>
         <Path d="M7 82c18 5 25-12 39-8 14 4 20 14 41 6" stroke={colors.moss} strokeDasharray="3 6" strokeLinecap="round" strokeWidth="2.6" />
         <Circle cx="10" cy="82" fill={colors.brass} r="5" />
         <Path d="M20 37h29l-3 36H23z" fill={colors.card} stroke={colors.ink} strokeLinejoin="round" strokeWidth="2.2" />
@@ -46,7 +48,7 @@ export function OfferIllustration({ kind }: OfferIllustrationProps) {
   }
 
   return (
-    <Svg height={104} viewBox="0 0 96 104" width={96}>
+    <Svg height={height} viewBox="0 0 96 104" width={width}>
       <Path d="M11 84c12-12 26-3 36-9 9-5 12-15 32-10" stroke={colors.moss} strokeDasharray="3 6" strokeLinecap="round" strokeWidth="2.6" />
       <Circle cx="80" cy="65" fill={colors.brass} r="5" />
       <Circle cx="45" cy="52" fill={colors.card} r="29" stroke={colors.ink} strokeWidth="2.2" />

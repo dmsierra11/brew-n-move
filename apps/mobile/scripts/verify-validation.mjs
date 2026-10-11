@@ -117,8 +117,8 @@ async function readToday(account, timeZone) {
     .eq('member_id', account.user.id)
     .eq('timezone', timeZone)
     .eq('local_date', localDateInTimeZone(new Date(), timeZone))
-    .maybeSingle();
-  return { error, row: data };
+    .order('validated_at', { ascending: true });
+  return { error, rows: data ?? [] };
 }
 
 const password = 'correct-horse';
@@ -229,10 +229,16 @@ check(
 
 const stored = await readToday(accountA, zone);
 const balanceA = await readBalance(accountA);
+const awardedSum = stored.rows.reduce((sum, row) => sum + row.awarded_points, 0);
+const capAward = stored.rows.find((row) => row.step_total === 20000);
 check(
-  'high-water total stays and balance is 200',
-  stored.row?.step_total === 25000 && stored.row?.awarded_points === 200 && balanceA.balance === 200,
-  `steps ${stored.row?.step_total} points ${stored.row?.awarded_points} balance ${balanceA.balance}`,
+  'each award is stored and the day sums to 200',
+  stored.rows.length === 3
+    && awardedSum === 200
+    && capAward?.awarded_points === 150
+    && !stored.rows.some((row) => row.step_total === 25000)
+    && balanceA.balance === 200,
+  `rows ${stored.rows.length} sum ${awardedSum} cap ${capAward?.awarded_points} balance ${balanceA.balance}`,
 );
 
 const repeat = await Promise.all([

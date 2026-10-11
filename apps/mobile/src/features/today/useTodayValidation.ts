@@ -42,6 +42,12 @@ function sameWindow(stored: StoredValidation, localDate: string, timeZone: strin
   return stored.localDate === localDate && stored.timezone === timeZone;
 }
 
+function awardedForWindow(records: StoredValidation[], localDate: string, timeZone: string) {
+  return records
+    .filter((record) => sameWindow(record, localDate, timeZone))
+    .reduce((sum, record) => sum + record.awardedPoints, 0);
+}
+
 function openSuccess(params: { delta: number; steps: number }) {
   router.push({
     pathname: '/validation-success',
@@ -105,8 +111,7 @@ export function useTodayValidation() {
       return null;
     }
 
-    const awarded = nextRecords.find((record) => sameWindow(record, localDate, timeZone))?.awardedPoints ?? 0;
-    return { awardedToday: awarded, balance: nextBalance };
+    return { awardedToday: awardedForWindow(nextRecords, localDate, timeZone), balance: nextBalance };
   }, [loadRecords, localDate, reloadBalance, timeZone]);
 
   const validate = useCallback(async () => {
@@ -216,7 +221,7 @@ export function useTodayValidation() {
 
   const awardedToday = records == null
     ? null
-    : records.find((record) => sameWindow(record, localDate, timeZone))?.awardedPoints ?? 0;
+    : awardedForWindow(records, localDate, timeZone);
 
   return {
     awardedToday,

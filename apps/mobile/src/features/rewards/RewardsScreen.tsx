@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -9,17 +10,23 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { AppText } from '../../components/AppText';
-import { OfferIllustration } from '../../components/OfferIllustration';
+import { PillButton } from '../../components/PillButton';
 import { motionSprings } from '../../motion/presets';
-import { colors, fonts, radii, spacing } from '../../theme/tokens';
-import { formatNumber } from '../../utils/format';
-import { Offer, offers } from './offers';
+import { colors, radii, spacing } from '../../theme/tokens';
+import { FavouriteButton } from './FavouriteButton';
+import { OfferBanner } from './OfferBanner';
+import { OfferPrice } from './OfferPrice';
+import { loadOffers, type Offer } from './offers';
+
+const cardImageHeight = 168;
 
 type RewardCardProps = Readonly<{
   offer: Offer;
 }>;
 
-const navigateToOffer = () => router.push('/offer');
+const navigateToOffer = (offerId: string) => {
+  router.push({ pathname: '/offer', params: { id: offerId } });
+};
 
 function RewardCard({ offer }: RewardCardProps) {
   const cardScale = useSharedValue(1);
@@ -30,10 +37,7 @@ function RewardCard({ offer }: RewardCardProps) {
     transform: [{ scale: cardScale.value }],
   }));
   const artStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: interpolate(artShift.value, [0, 1], [0, -4]) },
-      { rotate: `${interpolate(artShift.value, [0, 1], [0, -2])}deg` },
-    ],
+    transform: [{ translateY: interpolate(artShift.value, [0, 1], [0, -6]) }],
   }));
 
   const pressIn = () => {
@@ -56,55 +60,110 @@ function RewardCard({ offer }: RewardCardProps) {
 
   return (
     <Animated.View style={cardStyle}>
-      <Pressable
-        accessibilityHint="Opens the offer redemption screen"
-        accessibilityRole="button"
-        onPress={navigateToOffer}
-        onPressIn={pressIn}
-        onPressOut={pressOut}
-        style={styles.card}
-      >
-        <Animated.View
-          style={[
-            styles.art,
-            { backgroundColor: offer.accent },
-            artStyle,
-          ]}
+      <View style={styles.card}>
+        <Pressable
+          accessibilityHint="Opens this offer"
+          accessibilityRole="button"
+          onPress={() => navigateToOffer(offer.id)}
+          onPressIn={pressIn}
+          onPressOut={pressOut}
         >
-          <OfferIllustration kind={offer.illustration} />
-        </Animated.View>
-
-        <View style={styles.cardBody}>
-          <AppText role="eyebrow" style={styles.partner}>{offer.partner}</AppText>
-          <AppText role="heading" style={styles.title}>{offer.title}</AppText>
-          <View style={styles.cardBottom}>
-            <AppText role="caption" style={styles.value}>{offer.value}</AppText>
-            <View style={styles.cost}>
-              <AppText role="action" style={styles.costValue}>{formatNumber(offer.points)}</AppText>
-              <AppText role="caption" style={styles.costLabel}>points</AppText>
+          <Animated.View style={artStyle}>
+            <OfferBanner
+              accent={offer.accent}
+              height={cardImageHeight}
+              illustration={offer.illustration}
+              imageUrl={offer.imageUrl}
+            />
+          </Animated.View>
+          <View style={styles.cardBody}>
+            <AppText role="heading" style={styles.partner}>{offer.partner}</AppText>
+            <AppText numberOfLines={2} role="body" style={styles.description}>{offer.title}</AppText>
+            <View style={styles.metaRow}>
+              {offer.collectLabel ? (
+                <AppText role="caption" style={styles.collect}>{offer.collectLabel}</AppText>
+              ) : null}
+              <OfferPrice
+                listPriceCents={offer.listPriceCents}
+                payPriceCents={offer.payPriceCents}
+                points={offer.points}
+              />
             </View>
           </View>
+        </Pressable>
+        <View style={styles.heart}>
+          <FavouriteButton offerId={offer.id} />
         </View>
-
-        <Text style={styles.arrow} accessibilityElementsHidden>
-          ›
-        </Text>
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }
 
 export function RewardsScreen() {
+  const [offers, setOffers] = useState<Offer[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasOffers = useRef(false);
+
+  const load = useCallback(async () => {
+    const next = await loadOffers();
+    if (!next) {
+      if (!hasOffers.current) {
+        setFailed(true);
+      }
+      return;
+    }
+
+    hasOffers.current = true;
+    setFailed(false);
+    setOffers(next);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        alwaysBounceVertical
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            colors={[colors.moss]}
+            onRefresh={() => {
+              void refresh();
+            }}
+            progressBackgroundColor={colors.card}
+            refreshing={refreshing}
+            tintColor={colors.moss}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         <AppText role="body" style={styles.intro}>Choose a café treat.</AppText>
 
-        <View style={styles.list}>
-          {offers.map((offer) => (
-            <RewardCard key={offer.id} offer={offer} />
-          ))}
-        </View>
+        {failed ? (
+          <View style={styles.retry}>
+            <AppText role="caption" style={styles.retryCopy}>Rewards could not be loaded.</AppText>
+            <PillButton appearance="primary" label="Try again" onPress={() => { void load(); }} />
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {(offers ?? []).map((offer) => (
+              <RewardCard key={offer.id} offer={offer} />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -128,60 +187,48 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.lg,
   },
+  retry: {
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  retryCopy: {
+    color: colors.muted,
+  },
   card: {
-    alignItems: 'center',
     backgroundColor: colors.card,
     borderColor: colors.line,
     borderRadius: radii.lg,
     borderWidth: 1,
-    flexDirection: 'row',
-    minHeight: 144,
     overflow: 'hidden',
-    padding: spacing.md,
-  },
-  art: {
-    alignItems: 'center',
-    borderRadius: radii.md,
-    height: 116,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: 106,
   },
   cardBody: {
-    flex: 1,
-    marginLeft: spacing.md,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+  },
+  heart: {
+    position: 'absolute',
+    right: spacing.sm,
+    top: cardImageHeight + spacing.sm,
   },
   partner: {
-    color: colors.moss,
-  },
-  title: {
     color: colors.ink,
-    marginTop: 4,
+    paddingRight: 36,
   },
-  cardBottom: {
+  description: {
+    color: colors.ink,
+    marginTop: 2,
+  },
+  metaRow: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: spacing.md,
+    justifyContent: 'flex-end',
     marginTop: spacing.md,
   },
-  value: {
+  collect: {
     color: colors.muted,
-  },
-  cost: {
-    alignItems: 'baseline',
-    flexDirection: 'row',
-    gap: 4,
-  },
-  costValue: {
-    color: colors.ink,
-  },
-  costLabel: {
-    color: colors.muted,
-  },
-  arrow: {
-    color: colors.ink,
-    fontFamily: fonts.body,
-    fontSize: 30,
-    marginLeft: spacing.sm,
+    flex: 1,
+    paddingBottom: 2,
   },
 });

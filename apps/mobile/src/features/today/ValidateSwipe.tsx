@@ -20,6 +20,8 @@ import { motionSprings } from '../../motion/presets';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 type ValidateSwipeProps = Readonly<{
+  accessibilityHint?: string;
+  accessibilityLabel?: string;
   disabled: boolean;
   label: string;
   muted?: boolean;
@@ -31,6 +33,8 @@ const thumbSize = 52;
 const thumbInset = 6;
 
 export function ValidateSwipe({
+  accessibilityHint,
+  accessibilityLabel = 'Validate steps',
   disabled,
   label,
   muted = false,
@@ -121,8 +125,9 @@ export function ValidateSwipe({
   return (
     <GestureDetector gesture={gesture}>
       <View
-        accessibilityActions={[{ name: 'activate', label: 'Validate steps' }]}
-        accessibilityLabel="Validate steps"
+        accessibilityActions={[{ name: 'activate', label: accessibilityLabel }]}
+        accessibilityHint={accessibilityHint}
+        accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         onAccessibilityAction={(event) => {

@@ -64,7 +64,13 @@
         }
       ],
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Brew & Move uses your location to confirm you are at the café before you redeem."
+        }
+      ]
     ]
   }
 }

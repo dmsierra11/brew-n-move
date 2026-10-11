@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,20 +10,36 @@ import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { useAuth } from '../auth/AuthProvider';
 import { supabase } from '../auth/supabase';
 import { useBalance } from '../earning/BalanceProvider';
+import { deviceTimeZone, localDateInTimeZone } from '../earning/localDay';
 import { colors, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
 
-type ValidationDay = {
-  awardedPoints: number;
+type AwardRow = {
+  kind: 'award';
+  id: string;
   localDate: string;
-  stepTotal: number;
+  occurredAt: string;
+  points: number;
+  stepTotal: number | null;
   timezone: string;
-  validatedAt: string;
 };
+
+type RedeemRow = {
+  kind: 'redeem';
+  id: string;
+  localDate: string;
+  occurredAt: string;
+  partnerName: string;
+  points: number;
+  timezone: string;
+  title: string;
+};
+
+type ActivityRow = AwardRow | RedeemRow;
 
 type DayGroup = {
   date: string;
-  rows: ValidationDay[];
+  rows: ActivityRow[];
 };
 
 function formatDayHeading(localDate: string) {
@@ -35,7 +51,7 @@ function formatDayHeading(localDate: string) {
   }).format(new Date(year, month - 1, day));
 }
 
-function formatValidatedTime(iso: string, timeZone: string) {
+function formatRowTime(iso: string, timeZone: string) {
   return new Intl.DateTimeFormat('en-IE', {
     hour: '2-digit',
     hourCycle: 'h23',
@@ -44,25 +60,37 @@ function formatValidatedTime(iso: string, timeZone: string) {
   }).format(new Date(iso));
 }
 
-function groupByDay(rows: ValidationDay[]) {
-  const groups = new Map<string, ValidationDay[]>();
+function formatAwardMeta(row: AwardRow) {
+  const time = formatRowTime(row.occurredAt, row.timezone);
+  if (row.stepTotal == null) {
+    return time;
+  }
+
+  return `${time} · ${formatNumber(row.stepTotal)} steps`;
+}
+
+function groupByDay(rows: ActivityRow[]) {
+  const groups = new Map<string, ActivityRow[]>();
   for (const row of rows) {
     const current = groups.get(row.localDate) ?? [];
     current.push(row);
     groups.set(row.localDate, current);
   }
 
-  return [...groups.entries()].map(([date, items]) => ({
-    date,
-    rows: items,
-  })) satisfies DayGroup[];
+  return [...groups.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([date, items]) => ({
+      date,
+      rows: items.sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)),
+    })) satisfies DayGroup[];
 }
 
 export function ValidationsScreen() {
   const { beginAccountAction, profileStatus, sessionStatus, userId } = useAuth();
-  const { balance } = useBalance();
+  const { balance, reloadBalance } = useBalance();
   const [groups, setGroups] = useState<DayGroup[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const ready = sessionStatus === 'signedIn' && profileStatus === 'ready';
 
   const load = useCallback(async () => {
@@ -72,28 +100,58 @@ export function ValidationsScreen() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('step_validations')
-      .select('awarded_points, local_date, step_total, timezone, validated_at')
-      .eq('member_id', userId)
-      .order('local_date', { ascending: false })
-      .order('validated_at', { ascending: false });
+    const timeZone = deviceTimeZone();
+    const [awards, redemptions] = await Promise.all([
+      supabase
+        .from('step_validations')
+        .select('awarded_points, id, local_date, step_total, timezone, validated_at')
+        .eq('member_id', userId),
+      supabase
+        .from('redemptions')
+        .select('id, offer_title, partner_name, points_spent, redeemed_at')
+        .eq('member_id', userId),
+    ]);
 
-    if (error || !data) {
+    if (awards.error || !awards.data || redemptions.error || !redemptions.data) {
       setFailed(true);
       setGroups([]);
       return;
     }
 
+    const rows: ActivityRow[] = [
+      ...awards.data.map((row) => ({
+        kind: 'award' as const,
+        id: row.id,
+        localDate: row.local_date,
+        occurredAt: row.validated_at,
+        points: row.awarded_points,
+        stepTotal: row.step_total,
+        timezone: row.timezone,
+      })),
+      ...redemptions.data.map((row) => ({
+        kind: 'redeem' as const,
+        id: row.id,
+        localDate: localDateInTimeZone(new Date(row.redeemed_at), timeZone),
+        occurredAt: row.redeemed_at,
+        partnerName: row.partner_name,
+        points: row.points_spent,
+        timezone: timeZone,
+        title: row.offer_title,
+      })),
+    ];
+
     setFailed(false);
-    setGroups(groupByDay(data.map((row) => ({
-      awardedPoints: row.awarded_points,
-      localDate: row.local_date,
-      stepTotal: row.step_total,
-      timezone: row.timezone,
-      validatedAt: row.validated_at,
-    }))));
+    setGroups(groupByDay(rows));
   }, [ready, userId]);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([load(), reloadBalance()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load, reloadBalance]);
 
   useFocusEffect(useCallback(() => {
     void load();
@@ -101,7 +159,22 @@ export function ValidationsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        alwaysBounceVertical
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            colors={[colors.moss]}
+            onRefresh={() => {
+              void refresh();
+            }}
+            progressBackgroundColor={colors.card}
+            refreshing={refreshing}
+            tintColor={colors.moss}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         <ScreenBackButton accessibilityLabel="Back to Today" />
         <AppText accessibilityRole="header" role="title" style={styles.title}>
           Activity
@@ -118,7 +191,7 @@ export function ValidationsScreen() {
           <View style={styles.empty}>
             <AppText role="heading">Sign in to see your days</AppText>
             <AppText role="caption" style={styles.emptyCopy}>
-              Validations you submit will show up here.
+              Validations and redemptions will show up here.
             </AppText>
             <PillButton
               appearance="primary"
@@ -138,9 +211,9 @@ export function ValidationsScreen() {
           <AppText role="caption" style={styles.emptyCopy}>Loading your days</AppText>
         ) : groups.length === 0 ? (
           <View style={styles.empty}>
-            <AppText role="heading">No validations yet</AppText>
+            <AppText role="heading">No activity yet</AppText>
             <AppText role="caption" style={styles.emptyCopy}>
-              Validations you submit will show up here.
+              Validations and redemptions will show up here.
             </AppText>
           </View>
         ) : (
@@ -150,23 +223,39 @@ export function ValidationsScreen() {
                 {formatDayHeading(group.date)}
               </AppText>
               {group.rows.map((row) => (
-                <View key={`${row.localDate}-${row.timezone}-${row.validatedAt}`} style={styles.row}>
+                <View key={`${row.kind}-${row.id}`} style={styles.row}>
                   <View style={styles.rowIcon}>
                     <View style={styles.rowIconStem} />
                     <View style={styles.rowIconCup} />
                   </View>
-                  <View style={styles.rowCopy}>
-                    <AppText role="action">Steps validated</AppText>
-                    <AppText role="caption" style={styles.rowMeta}>
-                      {`${formatValidatedTime(row.validatedAt, row.timezone)} · ${formatNumber(row.stepTotal)} steps`}
-                    </AppText>
-                  </View>
-                  <AppText
-                    role="action"
-                    style={[styles.rowPoints, row.awardedPoints === 0 && styles.rowPointsMuted]}
-                  >
-                    {`+${formatNumber(row.awardedPoints)}`}
-                  </AppText>
+                  {row.kind === 'award' ? (
+                    <>
+                      <View style={styles.rowCopy}>
+                        <AppText role="action">Steps validated</AppText>
+                        <AppText role="caption" style={styles.rowMeta}>
+                          {formatAwardMeta(row)}
+                        </AppText>
+                      </View>
+                      <AppText
+                        role="action"
+                        style={[styles.rowPointsEarned, row.points === 0 && styles.rowPointsMuted]}
+                      >
+                        {`+${formatNumber(row.points)}`}
+                      </AppText>
+                    </>
+                  ) : (
+                    <>
+                      <View style={styles.rowCopy}>
+                        <AppText role="action">{row.title}</AppText>
+                        <AppText role="caption" style={styles.rowMeta}>
+                          {`${formatRowTime(row.occurredAt, row.timezone)} · ${row.partnerName}`}
+                        </AppText>
+                      </View>
+                      <AppText role="action" style={styles.rowPointsSpent}>
+                        {`−${formatNumber(row.points)}`}
+                      </AppText>
+                    </>
+                  )}
                 </View>
               ))}
             </View>
@@ -256,8 +345,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 2,
   },
-  rowPoints: {
+  rowPointsEarned: {
     color: colors.moss,
+  },
+  rowPointsSpent: {
+    color: colors.ink,
   },
   rowPointsMuted: {
     color: colors.muted,
