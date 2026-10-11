@@ -21,6 +21,7 @@ import {
   getReachedMilestone,
   pointsForSteps,
 } from '../earning/milestones';
+import { remainingClaim } from '../earning/validation';
 import { useHealth } from '../health/HealthProvider';
 import { healthPlatformName } from '../health/platform';
 import { MilestoneTrack } from './MilestoneTrack';
@@ -84,14 +85,6 @@ function ConnectCard({
 }
 
 function validationCopy(phase: ReturnType<typeof useTodayValidation>['phase'], overlaps: boolean) {
-  if (phase.kind === 'awarded') {
-    return `${formatNumber(phase.delta)} Brew Points added.`;
-  }
-
-  if (phase.kind === 'no_additional') {
-    return 'No additional points for this milestone.';
-  }
-
   if (phase.kind === 'day_closed') {
     return 'Today’s validation closed at midnight.';
   }
@@ -117,7 +110,7 @@ function validationCopy(phase: ReturnType<typeof useTodayValidation>['phase'], o
 
 export function TodayScreen() {
   const { connect, loading, refresh, status, steps } = useHealth();
-  const { claim, overlapsAnother, phase, resetKey, validate } = useTodayValidation();
+  const { awardedToday, overlapsAnother, phase, resetKey, validate } = useTodayValidation();
   const connected = status === 'granted';
   const countProgress = useSharedValue(1);
   const celebration = useSharedValue(0);
@@ -222,7 +215,17 @@ export function TodayScreen() {
     ? Math.max(0, nextMilestone.steps - displayedSteps)
     : 0;
   const statusCopy = validationCopy(phase, overlapsAnother);
-  const swipeLabel = phase.kind === 'submitting' ? 'Validating' : 'Swipe to validate';
+  const swipeLabel = phase.kind === 'submitting' ? 'Validating' : 'Validate steps';
+  const dayBlocked =
+    overlapsAnother || phase.kind === 'day_closed' || phase.kind === 'day_overlap';
+  const claimReady =
+    awardedToday != null && remainingClaim(steps, awardedToday) > 0 && !dayBlocked;
+  const nextPayable = getNextMilestone(steps);
+  const showReachCopy =
+    !claimReady
+    && nextPayable != null
+    && !dayBlocked
+    && (awardedToday != null || remainingClaim(steps, 0) === 0);
 
   return (
     <View style={styles.screen}>
@@ -277,29 +280,20 @@ export function TodayScreen() {
               </View>
             </View>
 
-            <View style={styles.pointsCard}>
-              <View>
-                <AppText role="heading" style={styles.cardLabel}>Available today</AppText>
-                <AppText role="caption" style={styles.cardCopy}>
-                  {overlapsAnother
-                    ? 'An overlapping day can’t be split.'
-                    : 'Points this validation can add.'}
-                </AppText>
-              </View>
-              <View style={styles.pointsAmount}>
-                <AppText role="stat" style={styles.pointsNumber}>{claim == null ? '—' : claim}</AppText>
-                <AppText role="caption" style={styles.pointsWord}>points</AppText>
-              </View>
-            </View>
-
             <ValidateSwipe
-              disabled={phase.kind === 'submitting'}
+              disabled={!claimReady || phase.kind === 'submitting'}
               label={swipeLabel}
+              muted={!claimReady}
               onComplete={() => {
                 void validate();
               }}
               resetKey={resetKey}
             />
+            {showReachCopy && nextPayable ? (
+              <AppText role="caption" style={styles.reachCopy}>
+                {`Reach ${formatNumber(nextPayable.steps)} steps to validate.`}
+              </AppText>
+            ) : null}
             {statusCopy ? <AppText role="caption" style={styles.statusCopy}>{statusCopy}</AppText> : null}
             <AppText role="caption" style={styles.midnightCopy}>
               Validate before midnight. After that, today can’t be recovered.
@@ -411,38 +405,17 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 1,
   },
-  pointsCard: {
-    alignItems: 'center',
-    backgroundColor: colors.moss,
-    borderRadius: radii.lg,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-    padding: spacing.lg,
-  },
-  cardLabel: {
-    color: colors.card,
-  },
-  cardCopy: {
-    color: colors.mossSoft,
-    marginTop: 3,
-    maxWidth: 210,
-  },
-  pointsAmount: {
-    alignItems: 'flex-end',
-  },
-  pointsNumber: {
-    color: colors.card,
-  },
-  pointsWord: {
-    color: colors.mossSoft,
-  },
   capRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: spacing.lg,
     paddingHorizontal: spacing.sm,
+  },
+  reachCopy: {
+    color: colors.muted,
+    marginTop: spacing.md,
+    textAlign: 'center',
   },
   statusCopy: {
     color: colors.ink,

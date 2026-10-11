@@ -1,21 +1,37 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useAuth } from '../features/auth/AuthProvider';
 import { useBalance } from '../features/earning/BalanceProvider';
 import { colors, fonts } from '../theme/tokens';
 import { AppText } from './AppText';
 
 export function PointsBalance() {
+  const { beginAccountAction, profileStatus, sessionStatus } = useAuth();
   const { balance } = useBalance();
   const label = balance == null ? 'Brew Points loading' : `${balance} Brew Points`;
   const value = balance == null ? '—' : String(balance);
 
   return (
-    <View style={styles.container} accessibilityLabel={label}>
+    <Pressable
+      accessibilityHint="Opens validation history"
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={() => {
+        if (sessionStatus === 'signedIn' && profileStatus === 'ready') {
+          router.push('/validations');
+          return;
+        }
+
+        beginAccountAction({ type: 'activity' });
+      }}
+      style={styles.container}
+    >
       <View style={styles.stamp}>
         <Text style={styles.stampText}>B</Text>
       </View>
       <AppText role="action" style={styles.value}>{value}</AppText>
-    </View>
+    </Pressable>
   );
 }
 

@@ -18,7 +18,7 @@ Design a lively café rewards product with clear hierarchy and restrained playfu
 
 ## Identity
 
-Use the source tokens in `apps/mobile/src/theme/tokens.ts`.
+Use the source tokens in `apps/mobile/src/theme/tokens.ts`. Ask before adding a colour, button size, or pattern.
 
 - Field `#F3F4F1`: app background
 - Card `#FFFFFF`: raised content
@@ -47,7 +47,9 @@ Keep text measurements local when they belong to a composition rather than a reu
 
 ## Buttons
 
-- Use the Action type role, a pill shape, and a minimum 44-point touch target.
+- Use the Action type role, a pill shape, and one of two sizes.
+- Compact is the default: 44-point height. Use it on cards and forms, such as Join, Connect, resend, Sign in, and Sign out.
+- Large is 64-point height. Use it for the one primary action on a full-screen moment, such as Continue after a validation. It matches the validate swipe height.
 - Primary is moss with light text. It means take the main positive action, such as Join or Connect.
 - Muted is gray with ink text. It communicates an existing state that opens management, such as Joined or Connected; it is not disabled.
 - Quiet is a card-coloured surface with an unobtrusive border. Use it for secondary and reversible actions such as Cancel or Sign out.
@@ -77,14 +79,15 @@ Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Du
 
 ### Today
 
-- Show the points stamp in the header.
+- Show the points stamp in the header. Tapping it opens validation history.
 - Make today's verified steps the dominant number.
-- Show Available today as the remaining claimable Brew Points: the rung already reached minus points already awarded today.
 - Keep the provisional milestone ladder in data. Draw every rung on a horizontal track the member can scroll, with steps and points on each stop.
 - Name the next meaningful milestone and state the remaining steps.
 - Celebrate crossing a milestone without blocking the screen.
 - Show the provisional 20,000-step daily cap without implying that steps beyond it disappear.
-- When health access is granted, make a swipe the one primary action and state that the local day closes at midnight. Dragging the brass stamp to the end submits. Releasing early does not. The café redemption swipe stays on its own screen.
+- When health access is granted and a reached rung would add Brew Points, make a swipe the one primary action and state that the local day closes at midnight. The track is moss. After the drag starts, a muted overlay at the same 0.72 opacity as a pressed pill grows from the left behind the brass stamp. At rest the overlay is hidden. Chevrons nudge right until the drag starts. Releasing early does not submit. The café redemption swipe stays on its own screen.
+- Below a paying rung, keep the swipe visible but disabled: a moss-soft track, muted label, and a quiet stamp that does not drag. Keep the remaining-steps line as the motivation.
+- After a confirmed award, take over the screen once: the awarded points, a line about the next rung, and Continue.
 
 ### Rewards
 

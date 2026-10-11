@@ -6,7 +6,6 @@ import { supabase } from '../auth/supabase';
 import { loadCurrentDocuments } from '../auth/documents';
 import {
   confirmedPersistedAward,
-  remainingClaim,
   type ValidationSnapshot,
 } from '../earning/validation';
 import { useBalance } from '../earning/BalanceProvider';
@@ -43,10 +42,20 @@ function sameWindow(stored: StoredValidation, localDate: string, timeZone: strin
   return stored.localDate === localDate && stored.timezone === timeZone;
 }
 
+function openSuccess(params: { delta: number; steps: number }) {
+  router.push({
+    pathname: '/validation-success',
+    params: {
+      delta: String(params.delta),
+      steps: String(params.steps),
+    },
+  });
+}
+
 export function useTodayValidation() {
   const { beginAccountAction, member, profileStatus, sessionStatus, userId } = useAuth();
   const { applyBalance, reloadBalance } = useBalance();
-  const { refresh, steps } = useHealth();
+  const { refresh } = useHealth();
   const [phase, setPhase] = useState<ValidationPhase>({ kind: 'idle' });
   const [records, setRecords] = useState<StoredValidation[] | null>(null);
   const [resetKey, setResetKey] = useState(0);
@@ -86,16 +95,9 @@ export function useTodayValidation() {
   const localDate = deviceLocalDate();
   const timeZone = deviceTimeZone();
   const currentWindow = dayWindow(localDate, timeZone);
-  const todayRecord = records?.find((record) => sameWindow(record, localDate, timeZone)) ?? null;
   const overlapsAnother = records?.some((record) =>
     !sameWindow(record, localDate, timeZone) && windowsOverlap(currentWindow, record),
   ) ?? false;
-  const awardedToday = records == null ? null : todayRecord?.awardedPoints ?? 0;
-  const claim = overlapsAnother
-    ? 0
-    : awardedToday == null
-      ? null
-      : remainingClaim(steps, awardedToday);
 
   const snapshot = useCallback(async (): Promise<ValidationSnapshot | null> => {
     const [nextBalance, nextRecords] = await Promise.all([reloadBalance(), loadRecords()]);
@@ -163,7 +165,8 @@ export function useTodayValidation() {
         if (after?.balance != null) {
           applyBalance(after.balance);
         }
-        setPhase({ kind: 'awarded', delta: persisted });
+        openSuccess({ delta: persisted, steps: stepTotal });
+        setPhase({ kind: 'idle' });
       } else {
         setPhase({ kind: 'unconfirmed' });
       }
@@ -177,9 +180,10 @@ export function useTodayValidation() {
     await loadRecords();
 
     if (result.reason === 'awarded') {
-      setPhase({ kind: 'awarded', delta: result.awardedDelta });
+      openSuccess({ delta: result.awardedDelta, steps: stepTotal });
+      setPhase({ kind: 'idle' });
     } else if (result.reason === 'no_additional') {
-      setPhase({ kind: 'no_additional' });
+      setPhase({ kind: 'idle' });
     } else if (result.reason === 'day_closed') {
       setPhase({ kind: 'day_closed' });
     } else if (result.reason === 'day_overlap') {
@@ -210,8 +214,12 @@ export function useTodayValidation() {
     userId,
   ]);
 
+  const awardedToday = records == null
+    ? null
+    : records.find((record) => sameWindow(record, localDate, timeZone))?.awardedPoints ?? 0;
+
   return {
-    claim,
+    awardedToday,
     overlapsAnother,
     phase,
     resetKey,

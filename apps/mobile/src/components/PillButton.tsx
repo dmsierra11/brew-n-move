@@ -12,12 +12,15 @@ type PillButtonAppearance =
   | 'primary'
   | 'quiet';
 
+type PillButtonSize = 'compact' | 'large';
+
 type PillButtonProps = Readonly<{
   accessibilityLabel?: string;
   appearance?: PillButtonAppearance;
   label: string;
   onPress: () => void;
   selected?: boolean;
+  size?: PillButtonSize;
   fullWidth?: boolean;
   trailing?: ReactNode;
 }>;
@@ -28,6 +31,7 @@ export function PillButton({
   label,
   onPress,
   selected = false,
+  size = 'compact',
   fullWidth = false,
   trailing,
 }: PillButtonProps) {
@@ -53,6 +57,7 @@ export function PillButton({
         resolvedAppearance === 'danger' && styles.danger,
         resolvedAppearance === 'dangerQuiet' && styles.dangerQuiet,
         resolvedAppearance === 'quiet' && styles.quiet,
+        size === 'large' && styles.large,
         fullWidth && styles.fullWidth,
         pressed && styles.pressed,
       ]}
@@ -96,6 +101,10 @@ const styles = StyleSheet.create({
   dangerQuiet: {
     backgroundColor: colors.card,
     borderColor: colors.blocked,
+  },
+  large: {
+    minHeight: 64,
+    paddingVertical: spacing.md,
   },
   fullWidth: {
     width: '100%',

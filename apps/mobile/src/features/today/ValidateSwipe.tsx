@@ -2,32 +2,44 @@ import { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
+  cancelAnimation,
+  interpolate,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { AppText } from '../../components/AppText';
 import { motionSprings } from '../../motion/presets';
-import { colors, fonts, radii } from '../../theme/tokens';
+import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 type ValidateSwipeProps = Readonly<{
   disabled: boolean;
   label: string;
+  muted?: boolean;
   onComplete: () => void;
   resetKey: number;
 }>;
 
+const thumbSize = 52;
+const thumbInset = 6;
+
 export function ValidateSwipe({
   disabled,
   label,
+  muted = false,
   onComplete,
   resetKey,
 }: ValidateSwipeProps) {
   const travel = useSharedValue(0);
   const maxTravel = useSharedValue(0);
+  const nudge = useSharedValue(0);
   const reduceMotion = useReducedMotion();
   const completed = useRef(false);
 
@@ -35,6 +47,33 @@ export function ValidateSwipe({
     completed.current = false;
     travel.value = 0;
   }, [resetKey, travel]);
+
+  useEffect(() => {
+    if (reduceMotion || disabled) {
+      cancelAnimation(nudge);
+      nudge.value = 0;
+      return;
+    }
+
+    nudge.value = withRepeat(
+      withSequence(
+        withTiming(1, {
+          duration: 640,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(0, {
+          duration: 640,
+          easing: Easing.inOut(Easing.quad),
+        }),
+      ),
+      -1,
+      false,
+    );
+
+    return () => {
+      cancelAnimation(nudge);
+    };
+  }, [disabled, nudge, reduceMotion]);
 
   const finish = () => {
     if (completed.current || disabled) {
@@ -63,15 +102,27 @@ export function ValidateSwipe({
       travel.value = reduceMotion ? 0 : withSpring(0, motionSprings.settle);
     });
 
+  const fillStyle = useAnimatedStyle(() => ({
+    width: travel.value,
+  }));
+
   const thumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: travel.value }],
   }));
+
+  const hintStyle = useAnimatedStyle(() => {
+    const faded = interpolate(travel.value, [0, 36], [1, 0]);
+    return {
+      opacity: faded,
+      transform: [{ translateX: travel.value + interpolate(nudge.value, [0, 1], [0, 10]) }],
+    };
+  });
 
   return (
     <GestureDetector gesture={gesture}>
       <View
         accessibilityActions={[{ name: 'activate', label: 'Validate steps' }]}
-        accessibilityLabel="Swipe to validate"
+        accessibilityLabel="Validate steps"
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         onAccessibilityAction={(event) => {
@@ -82,11 +133,19 @@ export function ValidateSwipe({
         onLayout={(event) => {
           maxTravel.value = Math.max(0, event.nativeEvent.layout.width - 64);
         }}
-        style={styles.track}
+        style={[styles.track, muted && styles.trackMuted]}
       >
-        <AppText role="action" style={styles.label}>{label}</AppText>
-        <Animated.View style={[styles.thumb, thumbStyle]}>
-          <AppText role="action" style={styles.stamp}>B</AppText>
+        {muted ? null : <Animated.View pointerEvents="none" style={[styles.fill, fillStyle]} />}
+        <AppText role="action" style={[styles.label, muted && styles.labelMuted]}>{label}</AppText>
+        {muted ? null : (
+          <Animated.View pointerEvents="none" style={[styles.hints, hintStyle]}>
+            <AppText role="action" style={styles.chevron}>›</AppText>
+            <AppText role="action" style={[styles.chevron, styles.chevronMid]}>›</AppText>
+            <AppText role="action" style={[styles.chevron, styles.chevronFaint]}>›</AppText>
+          </Animated.View>
+        )}
+        <Animated.View style={[styles.thumb, muted && styles.thumbMuted, thumbStyle]}>
+          <AppText role="action" style={[styles.stamp, muted && styles.stampMuted]}>B</AppText>
         </Animated.View>
       </View>
     </GestureDetector>
@@ -99,26 +158,68 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     height: 64,
     justifyContent: 'center',
+    marginTop: spacing.md,
     overflow: 'hidden',
+  },
+  fill: {
+    backgroundColor: colors.muted,
+    bottom: 0,
+    left: 0,
+    opacity: 0.72,
+    position: 'absolute',
+    top: 0,
   },
   label: {
     color: colors.card,
     textAlign: 'center',
   },
+  hints: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    left: thumbInset + thumbSize + 2,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+  },
+  chevron: {
+    color: colors.card,
+    fontSize: 22,
+    lineHeight: 24,
+    marginLeft: -6,
+    opacity: 1,
+  },
+  chevronMid: {
+    opacity: 0.72,
+  },
+  chevronFaint: {
+    opacity: 0.42,
+  },
   thumb: {
     alignItems: 'center',
     backgroundColor: colors.brass,
     borderRadius: radii.pill,
-    height: 52,
+    height: thumbSize,
     justifyContent: 'center',
-    left: 6,
+    left: thumbInset,
     position: 'absolute',
-    top: 6,
-    width: 52,
+    top: thumbInset,
+    width: thumbSize,
   },
   stamp: {
     color: colors.card,
     fontFamily: fonts.displayExtra,
     fontSize: 20,
+  },
+  trackMuted: {
+    backgroundColor: colors.mossSoft,
+  },
+  labelMuted: {
+    color: colors.muted,
+  },
+  thumbMuted: {
+    backgroundColor: colors.line,
+  },
+  stampMuted: {
+    color: colors.muted,
   },
 });

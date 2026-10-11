@@ -32,7 +32,12 @@ export type MemberProfile = {
   timezone: string;
 };
 
-export type AccountIntent = { type: 'join' } | { type: 'redeem' } | { type: 'validate' } | null;
+export type AccountIntent =
+  | { type: 'activity' }
+  | { type: 'join' }
+  | { type: 'redeem' }
+  | { type: 'validate' }
+  | null;
 
 type SessionStatus = 'guest' | 'loading' | 'signedIn';
 type ProfileStatus = 'error' | 'loading' | 'missing' | 'ready';
@@ -98,6 +103,10 @@ function routeForIntent(intent: AccountIntent) {
 
   if (intent?.type === 'join') {
     return '/(tabs)/communities' as const;
+  }
+
+  if (intent?.type === 'activity') {
+    return '/validations' as const;
   }
 
   return '/(tabs)/profile' as const;
