@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { useFocusEffect } from 'expo-router';
 import Animated, {
   cancelAnimation,
   useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -23,11 +23,13 @@ import {
 } from '../earning/milestones';
 import { useHealth } from '../health/HealthProvider';
 import { healthPlatformName } from '../health/platform';
+import { MilestoneTrack } from './MilestoneTrack';
+import { ValidateSwipe } from './ValidateSwipe';
+import { useTodayValidation } from './useTodayValidation';
 import type { HealthAccessStatus } from '../health/types';
-import { motionDurations, motionEasings, motionSprings } from '../../motion/presets';
+import { motionDurations, motionEasings } from '../../motion/presets';
 import { colors, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
-import { MilestoneProgress } from './MilestoneProgress';
 
 function connectCopy(status: HealthAccessStatus) {
   if (status === 'unavailable') {
@@ -81,22 +83,43 @@ function ConnectCard({
   );
 }
 
-function progressToward(steps: number) {
-  const next = getNextMilestone(steps);
-  const target = next?.steps ?? dailyStepCap;
-  if (target <= 0) {
-    return 1;
+function validationCopy(phase: ReturnType<typeof useTodayValidation>['phase'], overlaps: boolean) {
+  if (phase.kind === 'awarded') {
+    return `${formatNumber(phase.delta)} Brew Points added.`;
   }
 
-  return Math.min(steps / target, 1);
+  if (phase.kind === 'no_additional') {
+    return 'No additional points for this milestone.';
+  }
+
+  if (phase.kind === 'day_closed') {
+    return 'Today’s validation closed at midnight.';
+  }
+
+  if (phase.kind === 'day_overlap') {
+    return 'This day overlaps one you already validated, so it can’t add Brew Points.';
+  }
+
+  if (phase.kind === 'unconfirmed') {
+    return 'Couldn’t confirm this validation. Swipe again to retry.';
+  }
+
+  if (phase.kind === 'rejected') {
+    return 'Those steps could not be validated. Swipe again.';
+  }
+
+  if (overlaps) {
+    return 'This day overlaps one you already validated, so it can’t add Brew Points.';
+  }
+
+  return null;
 }
 
 export function TodayScreen() {
-  const { connect, loading, status, steps } = useHealth();
+  const { connect, loading, refresh, status, steps } = useHealth();
+  const { claim, overlapsAnother, phase, resetKey, validate } = useTodayValidation();
   const connected = status === 'granted';
   const countProgress = useSharedValue(1);
-  const trailProgress = useSharedValue(0);
-  const checkpointScale = useSharedValue(1);
   const celebration = useSharedValue(0);
   const fromSteps = useSharedValue(0);
   const toSteps = useSharedValue(0);
@@ -125,7 +148,6 @@ export function TodayScreen() {
       setDisplayedSteps(0);
       setCelebratedMilestone(null);
       countProgress.value = 1;
-      trailProgress.value = 0;
       celebration.value = 0;
       return;
     }
@@ -144,7 +166,6 @@ export function TodayScreen() {
     if (reduceMotion || start === end) {
       setDisplayedSteps(end);
       countProgress.value = 1;
-      trailProgress.value = progressToward(end);
       if (newlyReached) {
         setCelebratedMilestone(newlyReached);
         celebration.value = 1;
@@ -155,12 +176,8 @@ export function TodayScreen() {
     setCelebratedMilestone(null);
     celebration.value = 0;
     countProgress.value = 0;
-    countProgress.value = withTiming(1, {
-      duration: motionDurations.trail,
-      easing: motionEasings.trail,
-    });
-    trailProgress.value = withTiming(
-      progressToward(end),
+    countProgress.value = withTiming(
+      1,
       {
         duration: motionDurations.trail,
         easing: motionEasings.trail,
@@ -171,10 +188,6 @@ export function TodayScreen() {
         }
 
         scheduleOnRN(setCelebratedMilestone, newlyReached);
-        checkpointScale.value = withSequence(
-          withTiming(1.2, { duration: motionDurations.checkpointLift }),
-          withSpring(1, motionSprings.checkpoint),
-        );
         celebration.value = withTiming(1, {
           duration: motionDurations.celebration,
         });
@@ -183,21 +196,21 @@ export function TodayScreen() {
 
     return () => {
       cancelAnimation(countProgress);
-      cancelAnimation(trailProgress);
-      cancelAnimation(checkpointScale);
       cancelAnimation(celebration);
     };
   }, [
     celebration,
-    checkpointScale,
     connected,
     countProgress,
     fromSteps,
     reduceMotion,
     steps,
     toSteps,
-    trailProgress,
   ]);
+
+  useFocusEffect(useCallback(() => {
+    void refresh();
+  }, [refresh]));
 
   const celebrationStyle = useAnimatedStyle(() => ({
     opacity: celebration.value,
@@ -205,13 +218,11 @@ export function TodayScreen() {
   }));
 
   const nextMilestone = getNextMilestone(displayedSteps);
-  const pointsToday = pointsForSteps(displayedSteps);
-  const targetMilestone = nextMilestone ?? getReachedMilestone(displayedSteps);
   const remainingToMilestone = nextMilestone
     ? Math.max(0, nextMilestone.steps - displayedSteps)
     : 0;
-  const trailReached =
-    Boolean(celebratedMilestone) || (!nextMilestone && displayedSteps >= dailyStepCap);
+  const statusCopy = validationCopy(phase, overlapsAnother);
+  const swipeLabel = phase.kind === 'submitting' ? 'Validating' : 'Swipe to validate';
 
   return (
     <View style={styles.screen}>
@@ -225,12 +236,7 @@ export function TodayScreen() {
               </AppText>
               <AppText role="action" style={styles.unit}>steps</AppText>
 
-              <MilestoneProgress
-                checkpointScale={checkpointScale}
-                milestone={targetMilestone?.steps ?? dailyStepCap}
-                progress={trailProgress}
-                reached={trailReached}
-              />
+              <MilestoneTrack reduceMotion={Boolean(reduceMotion)} steps={displayedSteps} />
 
               <View style={styles.milestoneMessage}>
                 {celebratedMilestone ? (
@@ -275,14 +281,29 @@ export function TodayScreen() {
               <View>
                 <AppText role="heading" style={styles.cardLabel}>Available today</AppText>
                 <AppText role="caption" style={styles.cardCopy}>
-                  The highest milestone reached so far.
+                  {overlapsAnother
+                    ? 'An overlapping day can’t be split.'
+                    : 'Points this validation can add.'}
                 </AppText>
               </View>
               <View style={styles.pointsAmount}>
-                <AppText role="stat" style={styles.pointsNumber}>{pointsToday}</AppText>
+                <AppText role="stat" style={styles.pointsNumber}>{claim == null ? '—' : claim}</AppText>
                 <AppText role="caption" style={styles.pointsWord}>points</AppText>
               </View>
             </View>
+
+            <ValidateSwipe
+              disabled={phase.kind === 'submitting'}
+              label={swipeLabel}
+              onComplete={() => {
+                void validate();
+              }}
+              resetKey={resetKey}
+            />
+            {statusCopy ? <AppText role="caption" style={styles.statusCopy}>{statusCopy}</AppText> : null}
+            <AppText role="caption" style={styles.midnightCopy}>
+              Validate before midnight. After that, today can’t be recovered.
+            </AppText>
 
             <View style={styles.capRow}>
               <AppText role="caption" style={styles.capText}>Daily earning cap</AppText>
@@ -422,6 +443,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing.lg,
     paddingHorizontal: spacing.sm,
+  },
+  statusCopy: {
+    color: colors.ink,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  midnightCopy: {
+    color: colors.muted,
+    marginTop: spacing.sm,
+    textAlign: 'center',
   },
   capText: {
     color: colors.muted,

@@ -1,19 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useBalance } from '../features/earning/BalanceProvider';
 import { colors, fonts } from '../theme/tokens';
 import { AppText } from './AppText';
 
-type PointsBalanceProps = {
-  balance?: number;
-};
+export function PointsBalance() {
+  const { balance } = useBalance();
+  const label = balance == null ? 'Brew Points loading' : `${balance} Brew Points`;
+  const value = balance == null ? '—' : String(balance);
 
-export function PointsBalance({ balance = 0 }: Readonly<PointsBalanceProps>) {
   return (
-    <View style={styles.container} accessibilityLabel={`${balance} Brew Points`}>
+    <View style={styles.container} accessibilityLabel={label}>
       <View style={styles.stamp}>
         <Text style={styles.stampText}>B</Text>
       </View>
-      <AppText role="action" style={styles.value}>{balance}</AppText>
+      <AppText role="action" style={styles.value}>{value}</AppText>
     </View>
   );
 }

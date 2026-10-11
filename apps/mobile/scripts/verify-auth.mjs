@@ -57,7 +57,7 @@ const terms = documents.data?.find((document) => document.kind === 'terms');
 const privacy = documents.data?.find((document) => document.kind === 'privacy');
 check(
   'guest can read current legal documents',
-  !documents.error && terms?.version === '2026-10-05' && privacy?.version === '2026-10-05',
+  !documents.error && terms?.version === '2026-10-05' && privacy?.version === '2026-10-07',
   documents.error?.message ?? '',
 );
 
@@ -135,7 +135,7 @@ check(
   'onboarding stores versions and database timestamps',
   !insertA.error
     && insertA.data?.terms_version === '2026-10-05'
-    && insertA.data?.privacy_version === '2026-10-05'
+    && insertA.data?.privacy_version === '2026-10-07'
     && !String(insertA.data?.terms_accepted_at).startsWith('2000')
     && insertA.data?.email_verified_at == null,
   insertA.error?.message ?? '',

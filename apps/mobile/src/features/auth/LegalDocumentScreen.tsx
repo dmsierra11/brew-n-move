@@ -1,18 +1,24 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '../../components/AppText';
+import { PillButton } from '../../components/PillButton';
 import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { colors, spacing } from '../../theme/tokens';
+import { acknowledgePrivacy } from './acknowledgePrivacy';
+import { useAuth } from './AuthProvider';
 import { isLegalKind, loadCurrentDocuments, type LegalDocument } from './documents';
 
 export function LegalDocumentScreen() {
-  const params = useLocalSearchParams<{ kind?: string }>();
+  const params = useLocalSearchParams<{ acknowledge?: string; kind?: string }>();
   const kind = typeof params.kind === 'string' && isLegalKind(params.kind) ? params.kind : null;
+  const acknowledge = params.acknowledge === '1' && kind === 'privacy';
+  const { member, refreshMember } = useAuth();
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!kind) {
@@ -53,6 +59,32 @@ export function LegalDocumentScreen() {
         <AppText role="body" style={styles.body}>
           {document?.body ?? message}
         </AppText>
+        {acknowledge && document ? (
+          <PillButton
+            appearance="primary"
+            fullWidth
+            label={saving ? 'Saving' : 'I acknowledge the Privacy Policy'}
+            onPress={() => {
+              if (member && member.privacyVersion === document.version) {
+                router.back();
+                return;
+              }
+
+              setSaving(true);
+              void acknowledgePrivacy().then(async (result) => {
+                if (result.error) {
+                  setSaving(false);
+                  setMessage(result.error);
+                  return;
+                }
+
+                await refreshMember();
+                setSaving(false);
+                router.back();
+              });
+            }}
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

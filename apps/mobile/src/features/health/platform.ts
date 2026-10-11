@@ -6,6 +6,11 @@ export const healthPlatformName = Platform.select({
   default: 'Apple Health',
 }) as string;
 
+export const healthSourcePlatform = Platform.select({
+  android: 'health_connect',
+  default: 'apple_health',
+}) as 'apple_health' | 'health_connect';
+
 export function getLocalDayRange(now = new Date()) {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);

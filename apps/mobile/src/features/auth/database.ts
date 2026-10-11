@@ -65,6 +65,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      member_balances: {
+        Row: {
+          member_id: string;
+          balance: number;
+          updated_at: string;
+        };
+        Insert: {
+          member_id: string;
+          balance?: number;
+          updated_at?: string;
+        };
+        Update: {
+          balance?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      step_validations: {
+        Row: {
+          id: string;
+          member_id: string;
+          local_date: string;
+          timezone: string;
+          step_total: number;
+          source_platform: 'apple_health' | 'health_connect';
+          awarded_points: number;
+          validated_at: string;
+          window_start: string;
+          window_end: string;
+        };
+        Insert: {
+          id?: string;
+          member_id: string;
+          local_date: string;
+          timezone: string;
+          step_total: number;
+          source_platform: 'apple_health' | 'health_connect';
+          awarded_points: number;
+          validated_at?: string;
+          window_start: string;
+          window_end: string;
+        };
+        Update: {
+          step_total?: number;
+          source_platform?: 'apple_health' | 'health_connect';
+          awarded_points?: number;
+          validated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

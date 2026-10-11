@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -102,6 +103,10 @@ function routeForIntent(intent: AccountIntent) {
   return '/(tabs)/profile' as const;
 }
 
+function isGuestAccountPath(pathname: string) {
+  return pathname === '/sign-in' || pathname === '/sign-up' || pathname === '/legal-document';
+}
+
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null>(null);
@@ -109,6 +114,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [member, setMember] = useState<MemberProfile | null>(null);
   const [profileStatus, setProfileStatus] = useState<ProfileStatus>('loading');
   const [intent, setIntent] = useState<AccountIntent>(null);
+  const openedAccountFlow = useRef(false);
 
   const loadMember = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -182,6 +188,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setMember(null);
         setSessionStatus('guest');
         if (event === 'SIGNED_OUT') {
+          openedAccountFlow.current = false;
           setIntent(null);
         }
         return;
@@ -232,7 +239,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       return;
     }
 
-    if (pathname === '/sign-in' || pathname === '/sign-up' || pathname === '/legal-document') {
+    if (isGuestAccountPath(pathname)) {
+      openedAccountFlow.current = true;
+      return;
+    }
+
+    if (openedAccountFlow.current) {
+      openedAccountFlow.current = false;
+      setIntent(null);
       return;
     }
 
@@ -240,11 +254,13 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, [intent, pathname, profileStatus, sessionStatus]);
 
   const beginAccountAction = useCallback((next: Exclude<AccountIntent, null>) => {
+    openedAccountFlow.current = false;
     setIntent(next);
   }, []);
 
   const completeIntent = useCallback(() => {
     const destination = routeForIntent(intent);
+    openedAccountFlow.current = false;
     setIntent(null);
     router.dismissTo(destination);
   }, [intent]);
@@ -283,6 +299,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       await supabase.auth.signOut({ scope: 'local' });
       setSession(null);
       setMember(null);
+      openedAccountFlow.current = false;
       setIntent(null);
       setSessionStatus('guest');
       return;
@@ -315,6 +332,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, [loadMember, session]);
 
   const signOut = useCallback(async () => {
+    openedAccountFlow.current = false;
     setIntent(null);
     setMember(null);
     await supabase.auth.signOut();

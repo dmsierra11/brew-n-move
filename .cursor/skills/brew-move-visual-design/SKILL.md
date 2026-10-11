@@ -79,12 +79,12 @@ Do not add a mascot, coins, streaks, levels, ads, or jackpots. Do not imitate Du
 
 - Show the points stamp in the header.
 - Make today's verified steps the dominant number.
-- Show the Brew Points available at the highest milestone reached.
-- Keep the provisional milestone ladder separate from presentation so rates can change after partner testing.
+- Show Available today as the remaining claimable Brew Points: the rung already reached minus points already awarded today.
+- Keep the provisional milestone ladder in data. Draw every rung on a horizontal track the member can scroll, with steps and points on each stop.
 - Name the next meaningful milestone and state the remaining steps.
 - Celebrate crossing a milestone without blocking the screen.
 - Show the provisional 20,000-step daily cap without implying that steps beyond it disappear.
-- When validation is implemented, make Validate the one primary action and state that the local day closes at midnight.
+- When health access is granted, make a swipe the one primary action and state that the local day closes at midnight. Dragging the brass stamp to the end submits. Releasing early does not. The café redemption swipe stays on its own screen.
 
 ### Rewards
 

@@ -107,6 +107,8 @@ Apple Health or Health Connect provides the current local day's total, including
 
 The member explicitly validates the highest milestone reached before local midnight. A later validation on the same day awards only the difference to a newly reached milestone. An unvalidated day closes at midnight and cannot be recovered. Earned Brew Points stay in the balance until redeemed.
 
+A validated day owns the absolute interval from local midnight to the next local midnight in the timezone reported with that validation. Overlap is judged on those instants, not on the timezone name. Windows that only touch at a boundary do not overlap, so the next local day stays eligible. A window that overlaps an earlier validated window awards nothing. Step samples are not stored, so that overlapping day cannot be partially paid, and it cannot be claimed once it is no longer today.
+
 The provisional ladder is:
 
 | Daily steps | Brew Points |

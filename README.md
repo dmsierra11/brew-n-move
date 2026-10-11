@@ -114,7 +114,9 @@ Members sign up with email and password, Sign in with Apple, or Sign in with Goo
 
 A day is the calendar day in the member's current device timezone. iOS reads Apple Health and Android reads Health Connect. The app reads the health store's total for the current local day, including steps taken while the app was closed. It stores daily totals rather than individual step samples.
 
-The member explicitly validates a reached milestone before local midnight to convert it into Brew Points. A later validation on the same day awards only the difference to the highest newly reached milestone. An unvalidated day closes at midnight and cannot be recovered. Brew Points already in the balance do not expire.
+The member swipes to validate a reached milestone before local midnight. A later validation on the same day awards only the difference to the highest newly reached milestone. An unvalidated day closes at midnight and cannot be recovered. Brew Points already in the balance do not expire.
+
+Each validation owns the absolute window from local midnight to the next local midnight. Overlap uses those instants, not the timezone name. Adjacent windows stay eligible. An overlapping window awards nothing and cannot be partially paid, because step samples are not stored. The server records the submitted daily total and does not read Apple Health or Health Connect.
 
 The provisional milestone ladder is:
 
@@ -131,7 +133,7 @@ The provisional milestone ladder is:
 
 Steps below 2,500 do not reach a milestone. The daily maximum is provisionally 200 Brew Points at 20,000 steps. These rates and offer costs are experiments: adjust them after learning what participating businesses will provide to their communities and how members use the product. The current anchor is one specialty coffee, approximately €4.50, for 200 Brew Points.
 
-The same ladder lives in [`apps/mobile/src/features/earning/milestones.ts`](apps/mobile/src/features/earning/milestones.ts). Today reads it for the next milestone and the points it pays. Change the list there rather than duplicating thresholds in screens. Later validation should award from that list. Reprice a coffee on the offer itself; that does not require a new earning formula.
+The same ladder lives in [`apps/mobile/src/features/earning/milestones.ts`](apps/mobile/src/features/earning/milestones.ts). Today and the validation function both award from that list. Change the list there, and keep the server ladder in step with it. Reprice a coffee on the offer itself; that does not require a new earning formula.
 
 ### Redemption
 

@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider } from '../features/auth/AuthProvider';
+import { BalanceProvider } from '../features/earning/BalanceProvider';
 import { HealthProvider } from '../features/health/HealthProvider';
 
 export default function RootLayout() {
@@ -33,6 +34,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
+        <BalanceProvider>
         <HealthProvider>
           <StatusBar style="dark" />
           <Stack>
@@ -44,6 +46,7 @@ export default function RootLayout() {
             <Stack.Screen name="legal-document" options={{ headerShown: false, presentation: 'card' }} />
           </Stack>
         </HealthProvider>
+        </BalanceProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );
