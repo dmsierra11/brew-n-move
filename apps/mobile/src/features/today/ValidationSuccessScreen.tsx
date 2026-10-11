@@ -29,7 +29,7 @@ function nextCopy(steps: number) {
     return `You’re ${formatNumber(remaining)} steps from ${formatNumber(next.steps)}. Keep it up!`;
   }
 
-  return `Daily cap reached at ${formatNumber(dailyStepCap)} steps. Extra steps still count.`;
+  return `Daily cap reached at ${formatNumber(dailyStepCap)} steps. Come back tomorrow.`;
 }
 
 export function ValidationSuccessScreen() {

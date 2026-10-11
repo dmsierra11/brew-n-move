@@ -24,7 +24,6 @@ type ValidateSwipeProps = Readonly<{
   accessibilityLabel?: string;
   disabled: boolean;
   label: string;
-  muted?: boolean;
   onComplete: () => void;
   resetKey: number;
 }>;
@@ -37,7 +36,6 @@ export function ValidateSwipe({
   accessibilityLabel = 'Validate steps',
   disabled,
   label,
-  muted = false,
   onComplete,
   resetKey,
 }: ValidateSwipeProps) {
@@ -138,19 +136,17 @@ export function ValidateSwipe({
         onLayout={(event) => {
           maxTravel.value = Math.max(0, event.nativeEvent.layout.width - 64);
         }}
-        style={[styles.track, muted && styles.trackMuted]}
+        style={styles.track}
       >
-        {muted ? null : <Animated.View pointerEvents="none" style={[styles.fill, fillStyle]} />}
-        <AppText role="action" style={[styles.label, muted && styles.labelMuted]}>{label}</AppText>
-        {muted ? null : (
-          <Animated.View pointerEvents="none" style={[styles.hints, hintStyle]}>
-            <AppText role="action" style={styles.chevron}>›</AppText>
-            <AppText role="action" style={[styles.chevron, styles.chevronMid]}>›</AppText>
-            <AppText role="action" style={[styles.chevron, styles.chevronFaint]}>›</AppText>
-          </Animated.View>
-        )}
-        <Animated.View style={[styles.thumb, muted && styles.thumbMuted, thumbStyle]}>
-          <AppText role="action" style={[styles.stamp, muted && styles.stampMuted]}>B</AppText>
+        <Animated.View pointerEvents="none" style={[styles.fill, fillStyle]} />
+        <AppText role="action" style={styles.label}>{label}</AppText>
+        <Animated.View pointerEvents="none" style={[styles.hints, hintStyle]}>
+          <AppText role="action" style={styles.chevron}>›</AppText>
+          <AppText role="action" style={[styles.chevron, styles.chevronMid]}>›</AppText>
+          <AppText role="action" style={[styles.chevron, styles.chevronFaint]}>›</AppText>
+        </Animated.View>
+        <Animated.View style={[styles.thumb, thumbStyle]}>
+          <AppText role="action" style={styles.stamp}>B</AppText>
         </Animated.View>
       </View>
     </GestureDetector>
@@ -214,17 +210,5 @@ const styles = StyleSheet.create({
     color: colors.card,
     fontFamily: fonts.displayExtra,
     fontSize: 20,
-  },
-  trackMuted: {
-    backgroundColor: colors.mossSoft,
-  },
-  labelMuted: {
-    color: colors.muted,
-  },
-  thumbMuted: {
-    backgroundColor: colors.line,
-  },
-  stampMuted: {
-    color: colors.muted,
   },
 });

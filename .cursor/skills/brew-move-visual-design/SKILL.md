@@ -92,10 +92,10 @@ If it is unclear whether a list should refresh, ask before shipping without it.
 - Make today's verified steps the dominant number.
 - Keep the provisional milestone ladder in data. Draw every rung on a horizontal track the member can scroll, with steps and points on each stop.
 - Name the next meaningful milestone and state the remaining steps.
-- Celebrate crossing a milestone without blocking the screen.
-- Show the provisional 20,000-step daily cap without implying that steps beyond it disappear.
+- Celebrate crossing a milestone without blocking the screen. Once the daily cap is reached, keep the cap message in the reached-milestone style: brass steam marks, a moss heading, and a caption that says to come back tomorrow. Do not say that extra steps still count.
+- Show the provisional 20,000-step daily cap. Extra steps past that cap do not raise today’s Brew Points.
 - When health access is granted and a reached rung would add Brew Points, make a swipe the one primary action and state that the local day closes at midnight. The track is moss. After the drag starts, a muted overlay at the same 0.72 opacity as a pressed pill grows from the left behind the brass stamp. At rest the overlay is hidden. Chevrons nudge right until the drag starts. Releasing early does not submit. The café redemption swipe stays on its own screen.
-- Below a paying rung, keep the swipe visible but disabled: a moss-soft track, muted label, and a quiet stamp that does not drag. Keep the remaining-steps line as the motivation.
+- Below a paying rung, hide the swipe. In its place, show a short caption that names the remaining steps and the Brew Points at the next milestone.
 - After a confirmed award, take over the screen once: the awarded points, a line about the next rung, and Continue.
 
 ### Rewards

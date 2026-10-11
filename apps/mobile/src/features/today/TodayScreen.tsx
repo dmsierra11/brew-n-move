@@ -150,7 +150,9 @@ export function TodayScreen() {
     const crossed = getReachedMilestone(end);
     const alreadyHad = getReachedMilestone(start);
     const newlyReached =
-      crossed && crossed.steps !== alreadyHad?.steps ? crossed.steps : null;
+      crossed && getNextMilestone(crossed.steps) && crossed.steps !== alreadyHad?.steps
+        ? crossed.steps
+        : null;
 
     previousSteps.current = end;
     fromSteps.value = start;
@@ -220,9 +222,13 @@ export function TodayScreen() {
     overlapsAnother || phase.kind === 'day_closed' || phase.kind === 'day_overlap';
   const claimReady =
     awardedToday != null && remainingClaim(steps, awardedToday) > 0 && !dayBlocked;
+  const awaitingRetry = phase.kind === 'rejected' || phase.kind === 'unconfirmed';
+  const showSwipe =
+    phase.kind === 'submitting' || ((claimReady || awaitingRetry) && !dayBlocked);
   const nextPayable = getNextMilestone(steps);
-  const showReachCopy =
-    !claimReady
+  const showMilestoneNudge =
+    !showSwipe
+    && nextMilestone != null
     && nextPayable != null
     && !dayBlocked
     && (awardedToday != null || remainingClaim(steps, 0) === 0);
@@ -242,7 +248,22 @@ export function TodayScreen() {
               <MilestoneTrack reduceMotion={Boolean(reduceMotion)} steps={displayedSteps} />
 
               <View style={styles.milestoneMessage}>
-                {celebratedMilestone ? (
+                {nextMilestone == null ? (
+                  <View style={styles.celebration}>
+                    <View style={styles.steamMarks}>
+                      <View style={[styles.steamMark, styles.steamShort]} />
+                      <View style={styles.steamMark} />
+                      <View style={[styles.steamMark, styles.steamShort]} />
+                    </View>
+                    <AppText role="heading" style={styles.reachedTitle}>
+                      Daily cap reached
+                    </AppText>
+                    <AppText role="caption" style={styles.reachedCopy}>
+                      Come back tomorrow.
+                    </AppText>
+                  </View>
+                ) : null}
+                {nextMilestone && celebratedMilestone ? (
                   <Animated.View style={[styles.celebration, celebrationStyle]}>
                     <View style={styles.steamMarks}>
                       <View style={[styles.steamMark, styles.steamShort]} />
@@ -257,7 +278,7 @@ export function TodayScreen() {
                     </AppText>
                   </Animated.View>
                 ) : null}
-                {!celebratedMilestone && nextMilestone ? (
+                {nextMilestone && !celebratedMilestone ? (
                   <>
                     <AppText role="heading" style={styles.nextTitle}>
                       {formatNumber(remainingToMilestone)} steps to {formatNumber(nextMilestone.steps)}
@@ -267,31 +288,22 @@ export function TodayScreen() {
                     </AppText>
                   </>
                 ) : null}
-                {!celebratedMilestone && !nextMilestone ? (
-                  <>
-                    <AppText role="heading" style={styles.nextTitle}>
-                      Daily cap reached
-                    </AppText>
-                    <AppText role="caption" style={styles.nextCopy}>
-                      Extra steps still count. They don’t raise today’s points.
-                    </AppText>
-                  </>
-                ) : null}
               </View>
             </View>
 
-            <ValidateSwipe
-              disabled={!claimReady || phase.kind === 'submitting'}
-              label={swipeLabel}
-              muted={!claimReady}
-              onComplete={() => {
-                void validate();
-              }}
-              resetKey={resetKey}
-            />
-            {showReachCopy && nextPayable ? (
+            {showSwipe ? (
+              <ValidateSwipe
+                disabled={!claimReady || phase.kind === 'submitting'}
+                label={swipeLabel}
+                onComplete={() => {
+                  void validate();
+                }}
+                resetKey={resetKey}
+              />
+            ) : null}
+            {showMilestoneNudge && nextMilestone ? (
               <AppText role="caption" style={styles.reachCopy}>
-                {`Reach ${formatNumber(nextPayable.steps)} steps to validate.`}
+                {`Keep walking. ${formatNumber(remainingToMilestone)} steps to ${nextMilestone.points} Brew Points.`}
               </AppText>
             ) : null}
             {statusCopy ? <AppText role="caption" style={styles.statusCopy}>{statusCopy}</AppText> : null}
