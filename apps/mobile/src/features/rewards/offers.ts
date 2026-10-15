@@ -19,12 +19,6 @@ export type Offer = {
   illustration: IllustrationKind;
 };
 
-const presentation: Record<string, { accent: string; illustration: IllustrationKind }> = {
-  'brew-lab-flat-white': { accent: '#D9E8DF', illustration: 'flat-white' },
-  'canal-coffee-pastry': { accent: '#E9DDC7', illustration: 'coffee-pastry' },
-  'oak-and-bean-lunch': { accent: '#DAD8C7', illustration: 'lunch' },
-};
-
 const catalogColumns =
   'id, slug, partner_name, location_name, title, value_label, points_cost, location_address, description, list_price_cents, pay_price_cents, collect_start, collect_end, image_url';
 
@@ -45,10 +39,6 @@ type CatalogOfferRow = {
   value_label: string;
 };
 
-function look(slug: string) {
-  return presentation[slug] ?? { accent: '#D9E8DF', illustration: 'flat-white' as const };
-}
-
 function formatClock(value: string) {
   const match = /^(\d{2}):(\d{2})/.exec(value);
   if (!match) {
@@ -67,16 +57,15 @@ function collectLabel(start: string | null, end: string | null) {
 }
 
 export function mapCatalogOffer(row: CatalogOfferRow): Offer {
-  const visual = look(row.slug);
   const address = row.location_address?.trim();
 
   return {
-    accent: visual.accent,
+    accent: '#D9E8DF',
     address: address ? address : row.location_name,
     collectLabel: collectLabel(row.collect_start, row.collect_end),
     description: row.description,
     id: row.id,
-    illustration: visual.illustration,
+    illustration: 'flat-white',
     imageUrl: row.image_url,
     listPriceCents: row.list_price_cents,
     location: row.location_name,

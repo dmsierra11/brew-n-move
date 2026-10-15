@@ -1,11 +1,10 @@
 :root {
   font-family: system-ui, sans-serif;
-  color: #1f2937;
-  background: #ffffff;
+  color: #111827;
+  background: #fff;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -13,6 +12,15 @@ body {
 }
 
 h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
   margin: 0;
-  font-size: 2rem;
+}
+
+p {
+  line-height: 1.45;
 }

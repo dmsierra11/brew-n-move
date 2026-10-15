@@ -2,7 +2,8 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-// This function does not submit a Solana transaction. Redemption ledger rows stay blocked.
+// Exchange deducts Brew Points. Till confirm queues settlement after the response.
+// This function does not wait for a Solana transaction. Issuance rows stay blocked.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,7 @@ const corsHeaders = {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-type RedeemResult = {
+type RpcResult = {
   balance?: number;
   location?: string;
   offer_id?: string;
@@ -22,6 +23,7 @@ type RedeemResult = {
   reason?: string;
   redeemed_at?: string;
   redemption_id?: string;
+  till_confirmed_at?: string | null;
   title?: string;
   value_label?: string;
 };
@@ -33,43 +35,44 @@ function json(body: Record<string, unknown>, status: number) {
   });
 }
 
+function uuid(value: unknown) {
+  return typeof value === 'string' && uuidPattern.test(value) ? value : null;
+}
+
+function finiteCoord(value: unknown, min: number, max: number) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+    ? value
+    : null;
+}
+
 function payloadFrom(body: unknown) {
   if (!body || typeof body !== 'object') {
     return null;
   }
-
   const record = body as Record<string, unknown>;
-  const offerId = record.offerId;
-  const latitude = record.latitude;
-  const longitude = record.longitude;
+  const action = record.action === 'till' ? 'till' : record.action === 'exchange' ? 'exchange' : null;
+  const requestId = uuid(record.requestId);
   const commit = record.commit;
-  const requestId = record.requestId;
-
-  if (typeof offerId !== 'string' || !uuidPattern.test(offerId)) {
-    return null;
-  }
-
-  if (typeof latitude !== 'number' || !Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
-    return null;
-  }
-
-  if (typeof longitude !== 'number' || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-    return null;
-  }
-
-  if (typeof commit !== 'boolean') {
-    return null;
-  }
-
-  if (commit) {
-    if (typeof requestId !== 'string' || !uuidPattern.test(requestId)) {
+  if (action === 'till') {
+    const redemptionId = uuid(record.redemptionId);
+    const latitude = finiteCoord(record.latitude, -90, 90);
+    const longitude = finiteCoord(record.longitude, -180, 180);
+    if (!redemptionId || latitude == null || longitude == null) {
       return null;
     }
-
-    return { commit, latitude, longitude, offerId, requestId };
+    return { action, commit: true, latitude, longitude, offerId: null, redemptionId, requestId };
   }
-
-  return { commit, latitude, longitude, offerId, requestId: null };
+  if (action !== 'exchange' || typeof commit !== 'boolean') {
+    return null;
+  }
+  const offerId = uuid(record.offerId);
+  if (!offerId) {
+    return null;
+  }
+  if (commit && !requestId) {
+    return null;
+  }
+  return { action, commit, latitude: null, longitude: null, offerId, redemptionId: null, requestId };
 }
 
 Deno.serve(async (req) => {
@@ -111,20 +114,26 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const { data, error } = await admin.rpc('redeem_offer', {
-    p_commit: payload.commit,
-    p_latitude: payload.latitude,
-    p_longitude: payload.longitude,
-    p_member_id: userData.user.id,
-    p_offer_id: payload.offerId,
-    p_request_id: payload.requestId,
-  });
+  const invoked = payload.action === 'till'
+    ? await admin.rpc('confirm_till', {
+      p_latitude: payload.latitude,
+      p_longitude: payload.longitude,
+      p_member_id: userData.user.id,
+      p_redemption_id: payload.redemptionId,
+      p_request_id: payload.requestId,
+    })
+    : await admin.rpc('exchange_offer', {
+      p_commit: payload.commit,
+      p_member_id: userData.user.id,
+      p_offer_id: payload.offerId,
+      p_request_id: payload.requestId,
+    });
 
-  if (error || !data) {
+  if (invoked.error || !invoked.data) {
     return json({ ok: false, reason: 'unavailable' }, 500);
   }
 
-  const result = data as RedeemResult;
+  const result = invoked.data as RpcResult;
   const reason = result.reason ?? 'unavailable';
   if (reason === 'invalid_payload') {
     return json({ ok: false, reason }, 400);
@@ -137,6 +146,8 @@ Deno.serve(async (req) => {
     || reason === 'location_unavailable'
     || reason === 'outside_geofence'
     || reason === 'insufficient_balance'
+    || reason === 'budget_exhausted'
+    || reason === 'not_found'
   ) {
     return json({
       balance: result.balance ?? null,
@@ -145,15 +156,19 @@ Deno.serve(async (req) => {
     }, 409);
   }
 
-  if (reason === 'eligible') {
+  if (reason === 'eligible' || reason === 'issued') {
     return json({
       balance: result.balance ?? null,
       location: result.location ?? null,
       offerId: result.offer_id ?? payload.offerId,
       ok: true,
       partner: result.partner ?? null,
-      pointsCost: result.points_cost ?? null,
+      pointsCost: result.points_cost ?? result.points_spent ?? null,
+      pointsSpent: result.points_spent ?? null,
       reason,
+      redeemedAt: result.redeemed_at ?? null,
+      redemptionId: result.redemption_id ?? null,
+      tillConfirmedAt: result.till_confirmed_at ?? null,
       title: result.title ?? null,
       valueLabel: result.value_label ?? null,
     }, 200);
@@ -161,6 +176,18 @@ Deno.serve(async (req) => {
 
   if (reason !== 'redeemed') {
     return json({ ok: false, reason: 'unavailable' }, 500);
+  }
+
+  if (result.redemption_id) {
+    const redemptionId = result.redemption_id;
+    EdgeRuntime.waitUntil(fetch(`${supabaseUrl}/functions/v1/settle-reward`, {
+      body: JSON.stringify({ redemptionId }),
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    }).catch(() => undefined));
   }
 
   return json({
@@ -173,6 +200,7 @@ Deno.serve(async (req) => {
     reason,
     redeemedAt: result.redeemed_at ?? null,
     redemptionId: result.redemption_id ?? null,
+    tillConfirmedAt: result.till_confirmed_at ?? null,
     title: result.title ?? null,
     valueLabel: result.value_label ?? null,
   }, 200);

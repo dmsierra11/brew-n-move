@@ -418,6 +418,18 @@ verify_jwt = true
 [functions.redeem]
 verify_jwt = true
 
+[functions.settle-reward]
+verify_jwt = true
+
+[functions.admin-reward-budgets]
+verify_jwt = true
+
+[functions.admin-reward-action]
+verify_jwt = true
+
+[functions.admin-campaign]
+verify_jwt = true
+
 # pg-delta is the schema diff engine for db diff / db pull / db remote commit.
 # Set enabled = false to fall back to the legacy migra engine.
 [experimental.pgdelta]

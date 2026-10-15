@@ -185,6 +185,7 @@ export type Database = {
           points_spent: number;
           value_label: string;
           redeemed_at: string;
+          till_confirmed_at: string | null;
           client_request_id: string;
         };
         Insert: never;

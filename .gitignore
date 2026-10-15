@@ -8,3 +8,10 @@ dist/
 
 supabase/.temp/
 supabase/.branches/
+
+solana/reward-vault/target/
+solana/reward-vault/.anchor/
+solana/reward-vault/test-ledger/
+solana/reward-vault/node_modules/
+solana/reward-vault/keys/*.json
+solana/reward-vault/devnet-settlement.json

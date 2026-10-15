@@ -151,6 +151,17 @@ export function RewardsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <AppText role="body" style={styles.intro}>Choose a café treat.</AppText>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/my-rewards')}
+          style={styles.myRewards}
+        >
+          <AppText role="eyebrow">Your vouchers</AppText>
+          <AppText role="heading">My rewards</AppText>
+          <AppText role="caption" style={styles.myRewardsCopy}>
+            Open a reward you have already used points on.
+          </AppText>
+        </Pressable>
 
         {failed ? (
           <View style={styles.retry}>
@@ -182,6 +193,18 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: spacing.lg,
     maxWidth: 330,
+  },
+  myRewards: {
+    backgroundColor: colors.card,
+    borderColor: colors.line,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+  },
+  myRewardsCopy: {
+    color: colors.muted,
+    marginTop: 4,
   },
   list: {
     gap: spacing.md,

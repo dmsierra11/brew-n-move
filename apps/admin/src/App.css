@@ -1,5 +1,185 @@
 main {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 2rem 1.25rem 4rem;
+}
+
+main.narrow {
+  max-width: 36rem;
+}
+
+.bar,
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.bar {
+  margin-bottom: 1.5rem;
+}
+
+form {
   display: grid;
-  min-height: 100vh;
-  place-items: center;
+  gap: 0.85rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+button,
+a {
+  color: #111827;
+}
+
+button {
+  background: #111827;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.55rem 0.85rem;
+  width: fit-content;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button.secondary {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.6rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+dl {
+  display: grid;
+  gap: 0.5rem;
+}
+
+dt {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+section {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+  min-height: 5rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.preview {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.preview h3 {
+  font-size: 1rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.split {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.split > div {
+  display: grid;
+  grid-template-columns: 12rem 1fr;
+  gap: 0.75rem;
+}
+
+.split dt {
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.split dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.stack {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.vault {
+  margin-top: 2.5rem;
+}
+
+.vault summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.vault[open] summary {
+  margin-bottom: 1rem;
+}
+
+.advanced {
+  margin-top: 1.5rem;
+}
+
+.advanced summary {
+  font-weight: 600;
 }
