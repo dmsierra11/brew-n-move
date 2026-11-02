@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 
+import { FloatingTabBar } from '../../components/FloatingTabBar';
 import { MemberHeader } from '../../components/MemberHeader';
-import { TabIcon } from '../../components/TabIcon';
-import { colors, fonts } from '../../theme/tokens';
+import { colors } from '../../theme/tokens';
 
 function TodayHeader() {
   const localWeekday = new Intl.DateTimeFormat('en-IE', {
@@ -14,16 +14,12 @@ function TodayHeader() {
   return <MemberHeader eyebrow={localWeekday} title="Today" />;
 }
 
-function RewardsHeader() {
-  return <MemberHeader eyebrow="SPEND YOUR WALK" title="Rewards" />;
+function BrewPointsHeader() {
+  return <MemberHeader eyebrow="SPEND YOUR WALK" title="BrewPoints" />;
 }
 
-function CommunitiesHeader() {
-  return <MemberHeader title="Communities" />;
-}
-
-function ProfileHeader() {
-  return <MemberHeader title="Profile" />;
+function DiscoverHeader() {
+  return <MemberHeader title="Discover" />;
 }
 
 export default function TabLayout() {
@@ -31,59 +27,35 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: colors.moss,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: {
-          fontFamily: fonts.semibold,
-          fontSize: 12,
-        },
+        sceneStyle: { backgroundColor: colors.field },
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.line,
-          height: 82,
-          paddingBottom: 18,
-          paddingTop: 10,
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+          position: 'absolute',
         },
       }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
     >
       <Tabs.Screen
         name="index"
         options={{
           header: TodayHeader,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} focused={focused} name="home" />
-          ),
           title: 'Home',
         }}
       />
       <Tabs.Screen
         name="rewards"
         options={{
-          header: RewardsHeader,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} focused={focused} name="rewards" />
-          ),
-          title: 'Rewards',
+          header: BrewPointsHeader,
+          title: 'BrewPoints',
         }}
       />
       <Tabs.Screen
-        name="communities"
+        name="discover"
         options={{
-          header: CommunitiesHeader,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} focused={focused} name="communities" />
-          ),
-          title: 'Communities',
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          header: ProfileHeader,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} focused={focused} name="profile" />
-          ),
-          title: 'Profile',
+          header: DiscoverHeader,
+          title: 'Discover',
         }}
       />
     </Tabs>

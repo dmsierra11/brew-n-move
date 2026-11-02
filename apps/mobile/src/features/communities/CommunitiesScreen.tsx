@@ -4,9 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
-import { useAuth } from '../auth/AuthProvider';
 import { PillButton } from '../../components/PillButton';
+import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { colors, radii, spacing } from '../../theme/tokens';
+import { useAuth } from '../auth/AuthProvider';
 import {
   CommunityIllustration,
   CommunityIllustrationKind,
@@ -123,7 +124,13 @@ export function CommunitiesScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView edges={['top']} style={styles.screen}>
+      <View style={styles.topBar}>
+        <ScreenBackButton accessibilityLabel="Back" />
+        <AppText accessibilityRole="header" role="title" style={styles.topTitle}>
+          Communities
+        </AppText>
+      </View>
       <ScrollView
         alwaysBounceVertical
         contentContainerStyle={styles.content}
@@ -249,13 +256,24 @@ export function CommunitiesScreen() {
           </SafeAreaView>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     backgroundColor: colors.field,
+    flex: 1,
+  },
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  topTitle: {
+    color: colors.ink,
     flex: 1,
   },
   content: {

@@ -38,16 +38,17 @@ Leave these for a later slice:
 
 ## Member navigation
 
-Use four bottom tabs in this order:
+Use three floating bottom tabs in this order:
 
-- Home — today's verified steps, Brew Points earned today, and the member's balance
-- Rewards — the standard offer list, with an optional map view after location access is granted
-- Communities — communities the member can join
-- Profile — account, display name, health access, and other settings
+- Home — today's verified steps, Brew Points earned today, and milestone progress
+- BrewPoints — points balance, quick actions, standard offers, and recent activity
+- Discover — coming-soon lifestyle discovery placeholder for V1
 
-Keep the Brew Points balance visible in the app header. Begin redemption from an offer detail screen. Do not add separate Earn, Map, Spend, Discover, Social, or Challenges tabs, or a floating centre action.
+Profile opens from the gold B stamp in the shared header, outside the bottom tabs. Communities stays implemented but is not shown in the bottom bar for V1; it may return under Discover later.
 
-For the MVP, Map lives under Rewards rather than in the bottom bar. Implement it as an independent screen and module with no dependency on the Rewards tab layout, so it can become a standalone tab later without rewriting its feature logic.
+Begin redemption from an offer detail screen. Do not add separate Earn, Map, Spend, Social, or Challenges tabs, or a floating centre action.
+
+For the MVP, Map lives under rewards rather than in the bottom bar. Implement it as an independent screen and module with no dependency on the BrewPoints tab layout, so it can become a standalone tab later without rewriting its feature logic.
 
 ## Modularity
 

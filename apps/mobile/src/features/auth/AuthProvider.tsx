@@ -102,14 +102,14 @@ function routeForIntent(intent: AccountIntent) {
   }
 
   if (intent?.type === 'join') {
-    return '/(tabs)/communities' as const;
+    return '/communities' as const;
   }
 
   if (intent?.type === 'activity') {
     return '/validations' as const;
   }
 
-  return '/(tabs)/profile' as const;
+  return '/profile' as const;
 }
 
 function isGuestAccountPath(pathname: string) {

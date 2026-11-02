@@ -48,6 +48,8 @@ export default function RootLayout() {
             <Stack.Screen name="legal-document" options={{ headerShown: false, presentation: 'card' }} />
             <Stack.Screen name="validation-success" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="validations" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="profile" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="communities" options={{ headerShown: false, presentation: 'card' }} />
           </Stack>
         </HealthProvider>
         </BalanceProvider>

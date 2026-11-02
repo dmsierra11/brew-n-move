@@ -3,86 +3,99 @@ import { RefreshControl, StyleSheet, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
 import { PillButton } from '../../components/PillButton';
 import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../auth/supabase';
 import { useBalance } from '../earning/BalanceProvider';
-import { deviceTimeZone, localDateInTimeZone } from '../earning/localDay';
 import { colors, radii, spacing } from '../../theme/tokens';
 import { formatNumber } from '../../utils/format';
+import {
+  formatAwardMeta,
+  formatDayHeading,
+  formatRowTime,
+  loadMemberActivity,
+  type ActivityRow,
+  type DayGroup,
+} from './activity';
 
-type AwardRow = {
-  kind: 'award';
-  id: string;
-  localDate: string;
-  occurredAt: string;
-  points: number;
-  stepTotal: number | null;
-  timezone: string;
-};
-
-type RedeemRow = {
-  kind: 'redeem';
-  id: string;
-  localDate: string;
-  occurredAt: string;
-  partnerName: string;
-  points: number;
-  timezone: string;
-  title: string;
-};
-
-type ActivityRow = AwardRow | RedeemRow;
-
-type DayGroup = {
-  date: string;
-  rows: ActivityRow[];
-};
-
-function formatDayHeading(localDate: string) {
-  const [year, month, day] = localDate.split('-').map(Number);
-  return new Intl.DateTimeFormat('en-IE', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(year, month - 1, day));
+function FootprintsIcon({ color }: Readonly<{ color: string }>) {
+  return (
+    <Svg height={20} viewBox="0 0 24 24" width={20}>
+      <Path
+        d="M7.2 4.8c1.4-.2 2.6 1.1 2.3 2.6-.4 1.8-2.2 3.1-2.8 4.8-.4 1.1.2 2.3 1.3 2.6"
+        fill="none"
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.8}
+      />
+      <Path
+        d="M5.4 7.1c-.7.1-1.2.8-1 1.5M9.8 6.4c.7 0 1.2.6 1.1 1.3"
+        fill="none"
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.6}
+      />
+      <Path
+        d="M15.4 5.6c1.4-.3 2.7 1 2.5 2.5-.3 1.9-2 3.3-2.4 5-.3 1.2.4 2.3 1.5 2.5"
+        fill="none"
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.8}
+      />
+      <Path
+        d="M13.7 8c-.7.2-1.1.9-.9 1.5M18.1 7.1c.7 0 1.2.6 1.1 1.3"
+        fill="none"
+        stroke={color}
+        strokeLinecap="round"
+        strokeWidth={1.6}
+      />
+    </Svg>
+  );
 }
 
-function formatRowTime(iso: string, timeZone: string) {
-  return new Intl.DateTimeFormat('en-IE', {
-    hour: '2-digit',
-    hourCycle: 'h23',
-    minute: '2-digit',
-    timeZone,
-  }).format(new Date(iso));
+function TicketIcon({ color }: Readonly<{ color: string }>) {
+  return (
+    <Svg height={20} viewBox="0 0 24 24" width={20}>
+      <Path
+        d="M4.5 8.2c0-.9.7-1.7 1.7-1.7h11.6c.9 0 1.7.8 1.7 1.7v2.1a1.7 1.7 0 0 0 0 3.4v2.1c0 .9-.8 1.7-1.7 1.7H6.2c-1 0-1.7-.8-1.7-1.7v-2.1a1.7 1.7 0 0 0 0-3.4z"
+        fill="none"
+        stroke={color}
+        strokeLinejoin="round"
+        strokeWidth={1.8}
+      />
+      <Path
+        d="M10 7.5v9"
+        fill="none"
+        stroke={color}
+        strokeDasharray="2 2.5"
+        strokeLinecap="round"
+        strokeWidth={1.6}
+      />
+      <Rect fill={color} height="1.8" rx="0.9" width="4" x="13.2" y="10.2" />
+      <Rect fill={color} height="1.8" rx="0.9" width="4" x="13.2" y="13.2" />
+    </Svg>
+  );
 }
 
-function formatAwardMeta(row: AwardRow) {
-  const time = formatRowTime(row.occurredAt, row.timezone);
-  if (row.stepTotal == null) {
-    return time;
-  }
+function ActivityTypeIcon({ kind }: Readonly<{ kind: ActivityRow['kind'] }>) {
+  const award = kind === 'award';
 
-  return `${time} · ${formatNumber(row.stepTotal)} steps`;
-}
-
-function groupByDay(rows: ActivityRow[]) {
-  const groups = new Map<string, ActivityRow[]>();
-  for (const row of rows) {
-    const current = groups.get(row.localDate) ?? [];
-    current.push(row);
-    groups.set(row.localDate, current);
-  }
-
-  return [...groups.entries()]
-    .sort(([left], [right]) => right.localeCompare(left))
-    .map(([date, items]) => ({
-      date,
-      rows: items.sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)),
-    })) satisfies DayGroup[];
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[styles.iconBadge, award ? styles.iconBadgeAward : styles.iconBadgeRedeem]}
+    >
+      {award ? (
+        <FootprintsIcon color={colors.moss} />
+      ) : (
+        <TicketIcon color={colors.brass} />
+      )}
+    </View>
+  );
 }
 
 export function ValidationsScreen() {
@@ -100,48 +113,15 @@ export function ValidationsScreen() {
       return;
     }
 
-    const timeZone = deviceTimeZone();
-    const [awards, redemptions] = await Promise.all([
-      supabase
-        .from('step_validations')
-        .select('awarded_points, id, local_date, step_total, timezone, validated_at')
-        .eq('member_id', userId),
-      supabase
-        .from('redemptions')
-        .select('id, offer_title, partner_name, points_spent, redeemed_at')
-        .eq('member_id', userId),
-    ]);
-
-    if (awards.error || !awards.data || redemptions.error || !redemptions.data) {
+    const result = await loadMemberActivity(userId);
+    if (!result.ok) {
       setFailed(true);
       setGroups([]);
       return;
     }
 
-    const rows: ActivityRow[] = [
-      ...awards.data.map((row) => ({
-        kind: 'award' as const,
-        id: row.id,
-        localDate: row.local_date,
-        occurredAt: row.validated_at,
-        points: row.awarded_points,
-        stepTotal: row.step_total,
-        timezone: row.timezone,
-      })),
-      ...redemptions.data.map((row) => ({
-        kind: 'redeem' as const,
-        id: row.id,
-        localDate: localDateInTimeZone(new Date(row.redeemed_at), timeZone),
-        occurredAt: row.redeemed_at,
-        partnerName: row.partner_name,
-        points: row.points_spent,
-        timezone: timeZone,
-        title: row.offer_title,
-      })),
-    ];
-
     setFailed(false);
-    setGroups(groupByDay(rows));
+    setGroups(result.groups);
   }, [ready, userId]);
 
   const refresh = useCallback(async () => {
@@ -175,7 +155,7 @@ export function ValidationsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <ScreenBackButton accessibilityLabel="Back to Today" />
+        <ScreenBackButton accessibilityLabel="Back" />
         <AppText accessibilityRole="header" role="title" style={styles.title}>
           Activity
         </AppText>
@@ -224,10 +204,7 @@ export function ValidationsScreen() {
               </AppText>
               {group.rows.map((row) => (
                 <View key={`${row.kind}-${row.id}`} style={styles.row}>
-                  <View style={styles.rowIcon}>
-                    <View style={styles.rowIconStem} />
-                    <View style={styles.rowIconCup} />
-                  </View>
+                  <ActivityTypeIcon kind={row.kind} />
                   {row.kind === 'award' ? (
                     <>
                       <View style={styles.rowCopy}>
@@ -319,24 +296,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
-  rowIcon: {
+  iconBadge: {
     alignItems: 'center',
-    height: 28,
-    justifyContent: 'flex-end',
-    width: 22,
+    borderRadius: radii.sm,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
   },
-  rowIconStem: {
-    backgroundColor: colors.moss,
-    borderRadius: radii.pill,
-    height: 10,
-    width: 3,
+  iconBadgeAward: {
+    backgroundColor: colors.mossSoft,
   },
-  rowIconCup: {
-    backgroundColor: colors.brass,
-    borderRadius: 8,
-    height: 10,
-    marginTop: 2,
-    width: 16,
+  iconBadgeRedeem: {
+    backgroundColor: colors.brassSoft,
   },
   rowCopy: {
     flex: 1,
@@ -349,7 +320,7 @@ const styles = StyleSheet.create({
     color: colors.moss,
   },
   rowPointsSpent: {
-    color: colors.ink,
+    color: colors.brass,
   },
   rowPointsMuted: {
     color: colors.muted,

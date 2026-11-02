@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Modal,
   Pressable,
@@ -13,11 +13,26 @@ import Svg, { Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
 import { PillButton } from '../../components/PillButton';
+import { ScreenBackButton } from '../../components/ScreenBackButton';
 import { useAuth } from '../auth/AuthProvider';
 import { requestEmailVerification } from '../auth/emailVerification';
 import { useHealth } from '../health/HealthProvider';
 import { healthPlatformName } from '../health/platform';
 import { colors, radii, spacing, typography } from '../../theme/tokens';
+
+function ProfileChrome({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={styles.topBar}>
+        <ScreenBackButton accessibilityLabel="Back" />
+        <AppText accessibilityRole="header" role="title" style={styles.topTitle}>
+          Profile
+        </AppText>
+      </View>
+      {children}
+    </SafeAreaView>
+  );
+}
 
 type ProfileSheet = 'delete-account' | 'health' | null;
 
@@ -72,17 +87,17 @@ export function ProfileScreen() {
 
   if (sessionStatus === 'loading' || (sessionStatus === 'signedIn' && profileStatus === 'loading')) {
     return (
-      <View style={styles.screen}>
+      <ProfileChrome>
         <View style={styles.guest}>
           <AppText role="body">Loading your account</AppText>
         </View>
-      </View>
+      </ProfileChrome>
     );
   }
 
   if (sessionStatus === 'guest') {
     return (
-      <View style={styles.screen}>
+      <ProfileChrome>
         <View style={styles.guest}>
           <AppText accessibilityRole="header" role="heading">Save your walks</AppText>
           <AppText role="body" style={styles.guestCopy}>
@@ -101,13 +116,13 @@ export function ProfileScreen() {
             onPress={() => router.push('/sign-in')}
           />
         </View>
-      </View>
+      </ProfileChrome>
     );
   }
 
   if (profileStatus === 'missing') {
     return (
-      <View style={styles.screen}>
+      <ProfileChrome>
         <View style={styles.guest}>
           <AppText role="heading">Finish your account</AppText>
           <AppText role="body" style={styles.guestCopy}>
@@ -120,13 +135,13 @@ export function ProfileScreen() {
             onPress={() => router.push('/onboarding')}
           />
         </View>
-      </View>
+      </ProfileChrome>
     );
   }
 
   if (profileStatus === 'error' || !member) {
     return (
-      <View style={styles.screen}>
+      <ProfileChrome>
         <View style={styles.guest}>
           <AppText role="heading">Account unavailable</AppText>
           <AppText role="body" style={styles.guestCopy}>
@@ -149,7 +164,7 @@ export function ProfileScreen() {
             }}
           />
         </View>
-      </View>
+      </ProfileChrome>
     );
   }
 
@@ -191,7 +206,7 @@ export function ProfileScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <ProfileChrome>
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -352,13 +367,24 @@ export function ProfileScreen() {
           </SafeAreaView>
         </View>
       </Modal>
-    </View>
+    </ProfileChrome>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  safeArea: {
     backgroundColor: colors.field,
+    flex: 1,
+  },
+  topBar: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  topTitle: {
+    color: colors.ink,
     flex: 1,
   },
   guest: {
